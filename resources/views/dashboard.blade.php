@@ -73,7 +73,7 @@
                 <i class="ph ph-sprout text-[20px]"></i>
                 <span class="text-[15px]">Penanaman</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+            <a href="{{ route('irigasi') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-drop text-[20px]"></i>
                 <span class="text-[15px]">Pengairan & Irigasi</span>
             </a>
@@ -84,7 +84,7 @@
                 <span class="text-[15px]">Pemupukan</span>
             </a>
             
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+            <a href="{{ route('hama') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-bug text-[20px]"></i>
                 <span class="text-[15px]">Pengendalian Hama</span>
             </a>

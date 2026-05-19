@@ -9,6 +9,8 @@ use App\Models\Penjualan;
 use App\Models\KegiatanPerawatan;
 use App\Http\Controllers\PemupukanController;
 use App\Http\Controllers\PenanamanController;
+use App\Http\Controllers\IrigasiController;
+use App\Http\Controllers\HamaController;
 
 // ==========================================
 // ROUTE OTENTIKASI (Hanya untuk yang belum login)
@@ -80,7 +82,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/pemupukan', [PemupukanController::class, 'store'])->name('pemupukan.store');
     Route::get('/penanaman', [PenanamanController::class, 'index'])->name('penanaman');
     Route::post('/penanaman', [PenanamanController::class, 'store'])->name('penanaman.store');
-        
+    Route::get('/irigasi', [IrigasiController::class, 'index'])->name('irigasi');
+    Route::post('/irigasi', [IrigasiController::class, 'store'])->name('irigasi.store');
+    Route::get('/hama', [HamaController::class, 'index'])->name('hama');
+    Route::post('/hama', [HamaController::class, 'store'])->name('hama.store');
     // Route Resource (Otomatis membuat rute CRUD untuk lahan)
     Route::resource('lahan', LahanController::class);
 
