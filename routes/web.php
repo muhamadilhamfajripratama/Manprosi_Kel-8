@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\LahanController;
 use App\Http\Controllers\AuthController;
 use App\Models\Lahan;   
@@ -11,6 +12,7 @@ use App\Http\Controllers\PemupukanController;
 use App\Http\Controllers\PenanamanController;
 use App\Http\Controllers\IrigasiController;
 use App\Http\Controllers\HamaController;
+
 
 // ==========================================
 // ROUTE OTENTIKASI (Hanya untuk yang belum login)
@@ -86,6 +88,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/irigasi', [IrigasiController::class, 'store'])->name('irigasi.store');
     Route::get('/hama', [HamaController::class, 'index'])->name('hama');
     Route::post('/hama', [HamaController::class, 'store'])->name('hama.store');
+    Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi');
+
     // Route Resource (Otomatis membuat rute CRUD untuk lahan)
     Route::resource('lahan', LahanController::class);
 
@@ -97,7 +101,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/penjualan', function () { return view('penjualan'); });
     Route::get('/laporan', function () { return view('laporan'); });
     Route::get('/riwayat-batch', function () { return view('riwayat-batch'); });
-    Route::get('/notifikasi', function () { return view('notifikasi'); });
     Route::get('/profil', function () { return view('profil'); });
 
     // ----------------------------------------

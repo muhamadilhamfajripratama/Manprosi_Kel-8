@@ -32,4 +32,26 @@ class BatchTanam extends Model
     {
         return $this->belongsTo(User::class, 'petani_id');
     }
+
+// FUNGSI BARU: Menghitung jumlah badge merah notifikasi
+    public static function countNotifikasiPanen()
+    {
+        if (!\Illuminate\Support\Facades\Schema::hasTable('batch_tanam')) {
+            return 0;
+        }
+
+        $jumlahNotif = 0;
+        $batches = self::where('status', 'aktif')->get();
+        
+        foreach ($batches as $batch) {
+            // Tambahkan \ di depan Carbon ( \Carbon\Carbon )
+            $tglPanen = \Carbon\Carbon::parse($batch->tanggal_tanam)->addDays($batch->durasi_standar_hari);
+            
+            if (\Carbon\Carbon::now()->diffInDays($tglPanen, false) <= 14) {
+                $jumlahNotif++;
+            }
+        }
+
+        return $jumlahNotif;
+    }
 }

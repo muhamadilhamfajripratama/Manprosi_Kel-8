@@ -109,19 +109,20 @@
 
             <div class="h-px bg-white/10 my-2 mx-3"></div>
 
-            <a href="#" class="flex items-center justify-between px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
-                <div class="flex items-center gap-3">
-                    <i class="ph ph-bell text-[20px]"></i>
-                    <span class="text-[15px]">Notifikasi</span>
-                </div>
-                <span class="bg-primary-mid text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">3</span>
+            <a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+                <i class="ph ph-bell-ringing text-[20px]"></i>
+                <span class="text-[16px] flex-1">Notifikasi</span>
+                @if(isset($jumlahNotif) && $jumlahNotif > 0)
+                    <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $jumlahNotif }}</span>
+                @endif
             </a>
+
+            {{-- Link Pengaturan --}}
             <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-gear text-[20px]"></i>
-                <span class="text-[15px]">Pengaturan</span>
+                <span class="text-[16px]">Pengaturan</span>
             </a>
         </nav>
-
         {{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -155,12 +156,19 @@
             </div>
 
             <div class="flex items-center gap-5">
-                <button class="text-gray-400 hover:text-primary-dark transition"><i class="ph ph-magnifying-glass text-[24px]"></i></button>
-                <button class="text-gray-400 hover:text-primary-dark transition relative">
-                    <i class="ph ph-bell text-[24px]"></i>
-                    <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
-                </button>
-                <div class="h-6 w-px bg-gray-200"></div>
+    <button class="text-gray-400 hover:text-primary-dark transition"><i class="ph ph-magnifying-glass text-[24px]"></i></button>
+    
+        {{-- UBAH BUTTON MENJADI A HREF DI SINI --}}
+        <a href="{{ route('notifikasi') }}" class="text-gray-400 hover:text-primary-dark transition relative cursor-pointer">
+            <i class="ph ph-bell text-[24px]"></i>
+            
+            {{-- Titik merah hanya muncul jika ada notifikasi --}}
+                @if(\App\Models\BatchTanam::countNotifikasiPanen() > 0)
+                    <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                        {{ \App\Models\BatchTanam::countNotifikasiPanen() }}
+                    </span>
+                @endif
+            </a>
                 
                 <button class="flex items-center gap-2 hover:opacity-80 transition">
                     <div class="w-8 h-8 rounded-full bg-primary-dark text-white flex items-center justify-center font-semibold text-[12px]">
