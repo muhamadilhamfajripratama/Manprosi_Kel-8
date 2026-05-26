@@ -88,21 +88,21 @@
                 <i class="ph ph-bug text-[20px]"></i>
                 <span class="text-[15px]">Pengendalian Hama</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+            <a href="{{ route('perawatan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-wrench text-[20px]"></i>
                 <span class="text-[15px]">Perawatan Lain</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+            <a href="{{ route('panen') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-package text-[20px]"></i>
                 <span class="text-[15px]">Hasil Panen</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+            <a href="{{ route('penjualan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-money text-[20px]"></i>
                 <span class="text-[15px]">Penjualan</span>
             </a>
             
             {{-- Link Laporan --}}
-            <a href="/laporan" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+            <a href="{{ route('laporan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-chart-bar text-[20px]"></i>
                 <span class="text-[15px]">Laporan</span>
             </a>
@@ -207,10 +207,24 @@
                     <div class="w-12 h-12 rounded-[12px] bg-orange-50 text-orange-600 flex items-center justify-center text-[24px]"><i class="ph ph-package"></i></div>
                     <div><p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Batch Aktif</p><h3 class="text-[20px] font-bold text-gray-900">{{ $totalBatch ?? 0 }} Batch</h3></div>
                 </div>
-                <div class="bg-white p-5 rounded-[16px] shadow-card border border-gray-100 flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-[12px] bg-green-50 text-green-600 flex items-center justify-center text-[24px]"><i class="ph ph-calendar-check"></i></div>
-                    <div><p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Est. Panen</p><h3 class="text-[20px] font-bold text-gray-900">{{ $estimasiPanen ?? 0 }} Hari Lagi</h3></div>
+                {{-- CARD 3: EST. PANEN --}}
+            <div class="bg-white rounded-[16px] p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-green-50 text-green-500 flex items-center justify-center text-[28px] shrink-0">
+                    <i class="ph ph-calendar-check"></i>
                 </div>
+                <div>
+                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Est. Panen</p>
+                    
+                    {{-- Logika UI agar tidak bingung kalau 0 --}}
+                    @if($totalBatch == 0)
+                        <h3 class="text-[22px] font-bold text-gray-900">-</h3>
+                    @elseif($estimasiPanen == 0)
+                        <h3 class="text-[20px] font-bold text-red-500">Hari Ini!</h3>
+                    @else
+                        <h3 class="text-[22px] font-bold text-gray-900">{{ $estimasiPanen }} Hari Lagi</h3>
+                    @endif
+                </div>
+            </div>
                 <div class="bg-white p-5 rounded-[16px] shadow-card border border-gray-100 flex items-center gap-4">
                     <div class="w-12 h-12 rounded-[12px] bg-emerald-50 text-emerald-600 flex items-center justify-center text-[24px]"><i class="ph ph-currency-circle-dollar"></i></div>
                     <div><p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Pendapatan</p><h3 class="text-[20px] font-bold text-gray-900">Rp {{ $pendapatan ?? '0' }}</h3></div>
@@ -335,26 +349,55 @@
                             </tr>
                         </thead>
                         <tbody class="text-[13px] font-medium text-gray-700 divide-y divide-gray-50">
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-6 py-4 font-semibold text-gray-900">BP — Musim Tanam 1</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-2.5 py-1 bg-purple-50 text-purple-700 rounded-md text-[11px] font-bold uppercase">Bawang Putih</span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-500">Lahan Bawang Putih</td>
-                                <td class="px-6 py-4">20 Mei 2026</td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-full bg-gray-100 rounded-full h-1.5"><div class="bg-primary-mid h-1.5 rounded-full" style="width: 85%"></div></div>
-                                        <span class="text-[11px] text-gray-500">85%</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="px-2.5 py-1 bg-green-100 text-green-700 rounded-md text-[11px] font-bold uppercase">Aktif</span>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <button class="text-primary-mid hover:underline font-semibold text-[13px]">Detail</button>
-                                </td>
-                            </tr>
+                            @forelse($batchesAktif as $batch)
+                                @php
+                                    // LOGIKA PERHITUNGAN PROGRESS BAR
+                                    $tglTanam = \Carbon\Carbon::parse($batch->tanggal_tanam)->startOfDay();
+                                    $durasiStandar = $batch->durasi_standar_hari ?: 1; // Cegah bagi nol
+                                    $tglPanen = $tglTanam->copy()->addDays($durasiStandar);
+                                    
+                                    // Hitung hari yang sudah berlalu
+                                    $hariBerjalan = $tglTanam->diffInDays(\Carbon\Carbon::now()->startOfDay(), false);
+                                    
+                                    // Hitung persentase (minimal 0, maksimal 100)
+                                    $persen = max(0, min(100, round(($hariBerjalan / $durasiStandar) * 100)));
+                                    
+                                    // Tentukan warna progress bar berdasarkan persentase
+                                    $barColor = 'bg-primary-mid'; // Hijau normal
+                                    if ($persen < 30) $barColor = 'bg-blue-400'; // Biru untuk fase awal
+                                    if ($persen > 90) $barColor = 'bg-amber-500'; // Kuning untuk siap panen
+                                @endphp
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-6 py-4 font-semibold text-gray-900">{{ $batch->komoditas }} — {{ $tglTanam->translatedFormat('M Y') }}</td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2.5 py-1 bg-purple-50 text-purple-700 rounded-md text-[11px] font-bold uppercase">{{ $batch->komoditas }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-gray-500">{{ $batch->lahan->nama_lahan ?? 'Belum ada lahan' }}</td>
+                                    <td class="px-6 py-4 font-semibold">{{ $tglPanen->translatedFormat('d M Y') }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-full bg-gray-100 rounded-full h-1.5">
+                                                <div class="{{ $barColor }} h-1.5 rounded-full transition-all duration-500" style="width: {{ $persen }}%"></div>
+                                            </div>
+                                            <span class="text-[11px] font-bold text-gray-500 w-8">{{ $persen }}%</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        @if($persen >= 100)
+                                            <span class="px-2.5 py-1 bg-amber-100 text-amber-700 rounded-md text-[11px] font-bold uppercase">Siap Panen</span>
+                                        @else
+                                            <span class="px-2.5 py-1 bg-green-100 text-green-700 rounded-md text-[11px] font-bold uppercase">Aktif</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <a href="#" class="text-primary-mid hover:underline font-semibold text-[13px]">Detail</a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-6 py-10 text-center text-gray-400 font-medium">Belum ada batch tanaman yang aktif saat ini.</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

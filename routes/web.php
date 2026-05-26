@@ -33,50 +33,57 @@ Route::middleware('auth')->group(function () {
     // Proses Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Dashboard Utama
+// Dashboard Utama
     Route::get('/', function () { 
-        $lahans = App\Models\Lahan::with('petani')->get();
+        $lahans = \App\Models\Lahan::with('petani')->get();
         $totalLahan = $lahans->sum('luas_ha');
 
-        // 2. Mengambil total Batch Tanaman yang berstatus masih aktif secara otomatis
-        // Jaring Pengaman: Jika class model/tabel belum dibuat, sistem otomatis mengembalikan angka 0 agar tidak error crashing
-        $totalBatch = class_exists(\App\Models\BatchPenanaman::class) 
-            ? \App\Models\BatchPenanaman::where('status', 'aktif')->count() 
-            : 0; 
+        // Ambil data batch aktif beserta relasi lahannya
+        $batchesAktif = \App\Models\BatchTanam::with('lahan')->where('status', 'aktif')->orderBy('tanggal_tanam', 'desc')->get();
+        $totalBatch = $batchesAktif->count(); 
 
-        // 3. Mengambil sisa hari terdekat menuju estimasi panen dari batch tanaman yang ada
-        // Menggunakan nilai minimum dari kolom sisa_hari_panen di database
-        $estimasiPanen = class_exists(\App\Models\BatchPenanaman::class)
-            ? (\App\Models\BatchPenanaman::where('status', 'aktif')->min('sisa_hari_panen') ?? 0)
-            : 0;
+        // Kalkulasi Sisa Hari Panen
+        $estimasiPanen = null;
+        foreach ($batchesAktif as $batch) {
+            $tglPanen = \Carbon\Carbon::parse($batch->tanggal_tanam)->addDays($batch->durasi_standar_hari);
+            $sisaHari = \Carbon\Carbon::now()->startOfDay()->diffInDays($tglPanen->startOfDay(), false);
 
-        // 4. Menghitung otomatis total nominal omzet penjualan hasil panen dari database
-        $totalPendapatanRaw = class_exists(\App\Models\Penjualan::class)
-            ? \App\Models\Penjualan::sum('total_harga')
-            : 0;
+            if ($sisaHari >= 0) {
+                if (is_null($estimasiPanen) || $sisaHari < $estimasiPanen) {
+                    $estimasiPanen = $sisaHari;
+                }
+            }
+        }
+        $estimasiPanen = $estimasiPanen ?? 0;
 
-        // MENGUBAH FORMAT NOMINAL ANGKA MENJADI FORMAT RINGKAS (Contoh: 24500000 menjadi 24.5M)
+        // Menghitung pendapatan
+        $totalPendapatanRaw = class_exists(\App\Models\Penjualan::class) ? \App\Models\Penjualan::sum('total_harga') : 0;
         if ($totalPendapatanRaw >= 1000000000) {
-            $pendapatan = round($totalPendapatanRaw / 1000000000, 1) . 'B'; // Billion / Miliar
+            $pendapatan = round($totalPendapatanRaw / 1000000000, 1) . 'B'; 
         } elseif ($totalPendapatanRaw >= 1000000) {
-            $pendapatan = round($totalPendapatanRaw / 1000000, 1) . 'M'; // Million / Juta
+            $pendapatan = round($totalPendapatanRaw / 1000000, 1) . 'M'; 
         } elseif ($totalPendapatanRaw >= 1000) {
-            $pendapatan = round($totalPendapatanRaw / 1000, 1) . 'K'; // Thousand / Ribu
+            $pendapatan = round($totalPendapatanRaw / 1000, 1) . 'K'; 
         } else {
             $pendapatan = number_format($totalPendapatanRaw, 0, ',', '.');
         }
+
+        // Ambil jumlah notifikasi
+        $jumlahNotif = \App\Models\BatchTanam::countNotifikasiPanen();
 
         return view('dashboard', compact(
             'lahans', 
             'totalLahan', 
             'totalBatch', 
             'estimasiPanen', 
-            'pendapatan'
+            'pendapatan',
+            'batchesAktif',
+            'jumlahNotif'
         )); 
     })->name('dashboard');
 
     Route::get('/peta-gis', function () {
-        $lahans = \App\Models\Lahan::with('petani')->get();
+        $lahans = Lahan::with('petani')->get();
         return view('peta_gis', compact('lahans'));
     })->name('peta.gis');
 
@@ -89,6 +96,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/hama', [HamaController::class, 'index'])->name('hama');
     Route::post('/hama', [HamaController::class, 'store'])->name('hama.store');
     Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi');
+    Route::get('/perawatan', [App\Http\Controllers\PerawatanController::class, 'index'])->name('perawatan');
+    Route::post('/perawatan', [App\Http\Controllers\PerawatanController::class, 'store'])->name('perawatan.store');
+    Route::get('/panen', [App\Http\Controllers\PanenController::class, 'index'])->name('panen');
+    Route::post('/panen', [App\Http\Controllers\PanenController::class, 'store'])->name('panen.store');
+    Route::get('/penjualan', [App\Http\Controllers\PenjualanController::class, 'index'])->name('penjualan');
+    Route::post('/penjualan', [App\Http\Controllers\PenjualanController::class, 'store'])->name('penjualan.store');
+    Route::get('/penjualan/invoice/{id}', [App\Http\Controllers\PenjualanController::class, 'invoice'])->name('penjualan.invoice');
+    Route::get('/laporan', [App\Http\Controllers\LaporanController::class, 'index'])->name('laporan');
 
     // Route Resource (Otomatis membuat rute CRUD untuk lahan)
     Route::resource('lahan', LahanController::class);
@@ -96,10 +111,6 @@ Route::middleware('auth')->group(function () {
     // ----------------------------------------
     // UI Routes (Petani & Umum)
     // ----------------------------------------
-    Route::get('/perawatan', function () { return view('perawatan'); });
-    Route::get('/panen', function () { return view('panen'); });
-    Route::get('/penjualan', function () { return view('penjualan'); });
-    Route::get('/laporan', function () { return view('laporan'); });
     Route::get('/riwayat-batch', function () { return view('riwayat-batch'); });
     Route::get('/profil', function () { return view('profil'); });
 

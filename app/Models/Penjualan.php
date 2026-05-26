@@ -48,6 +48,11 @@ class Penjualan extends Model
         return $this->belongsTo(HasilPanen::class, 'hasil_panen_id');
     }
 
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class, 'id_penjualan');
+    }
+
     public function distributor()
     {
         return $this->belongsTo(User::class, 'distributor_id');

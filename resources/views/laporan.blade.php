@@ -1,137 +1,244 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Tani - Laporan Pendapatan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Montserrat', 'sans-serif'] }, colors: { primary: { dark: '#004F3B', mid: '#43B75D' }, cream: '#EEEEEE' } } } }
+    </script>
+</head>
+<body class="bg-cream font-sans text-gray-700 h-screen flex overflow-hidden">
 
-@section('content')
-<main class="flex-1 overflow-y-auto p-8 bg-cream">
-    <div class="mb-6 flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-primary-dark">Laporan Pendapatan</h1>
-        <div class="flex gap-2">
-            <select class="border border-gray-200 rounded-[8px] px-3 py-2 text-sm focus:outline-none focus:border-primary-mid bg-white">
-                <option>Tahun 2026</option>
-                <option>Tahun 2025</option>
-            </select>
-            <button class="bg-primary-mid text-white px-4 py-2 rounded-[8px] hover:bg-primary-dark transition-colors flex items-center gap-2">
-                <i class="ph ph-printer"></i> Cetak Laporan
+    {{-- SIDEBAR NAVBAR --}}
+    <aside class="w-[260px] bg-primary-dark flex flex-col shrink-0 text-white shadow-xl z-30">
+        <div class="h-[80px] flex items-center px-6 border-b border-white/10 shrink-0">
+            <div class="w-8 h-8 rounded bg-primary-mid flex items-center justify-center mr-3"><i class="ph ph-leaf text-white text-xl"></i></div>
+            <h1 class="text-[20px] font-semibold tracking-wide">Sistem Tani</h1>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-1.5">
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-house text-[20px]"></i><span class="text-[15px]">Dashboard</span></a>
+            <a href="{{ route('peta.gis') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-map-trifold text-[20px]"></i><span class="text-[15px]">Peta GIS</span></a>
+            <a href="{{ route('lahan.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-plant text-[20px]"></i><span class="text-[15px]">Data Lahan</span></a>
+            <a href="{{ route('penanaman') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-sprout text-[20px]"></i><span class="text-[15px]">Penanaman</span></a>
+            <a href="{{ route('irigasi') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-drop text-[20px]"></i><span class="text-[15px]">Pengairan & Irigasi</span></a>
+            <a href="{{ route('pemupukan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-flask text-[20px]"></i><span class="text-[15px]">Pemupukan</span></a>
+            <a href="{{ route('hama') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-bug text-[20px]"></i><span class="text-[15px]">Pengendalian Hama</span></a>
+            <a href="{{ route('perawatan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-wrench text-[20px]"></i><span class="text-[15px]">Perawatan Lain</span></a>
+            <a href="{{ route('panen') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-package text-[20px]"></i><span class="text-[15px]">Hasil Panen</span></a>
+            <a href="{{ route('penjualan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-currency-dollar text-[20px]"></i><span class="text-[15px]">Penjualan</span></a>
+            
+            {{-- Menu Aktif --}}
+            <a href="{{ route('laporan') }}" class="flex items-center gap-3 px-3 py-2.5 bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg transition shadow-md"><i class="ph ph-chart-bar text-[20px]"></i><span class="text-[15px]">Laporan</span></a>
+            
+            <a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition mt-4">
+                <i class="ph ph-bell-ringing text-[20px]"></i><span class="text-[15px] flex-1">Notifikasi</span>
+            </a>
+        </nav>
+        
+        <div class="p-4 border-t border-white/10 shrink-0 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-primary-mid text-white flex items-center justify-center font-semibold text-[14px]">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
+                <div class="flex flex-col">
+                    <span class="text-[12px] font-semibold text-white leading-tight truncate max-w-[100px]">{{ Auth::user()->name }}</span>
+                    <span class="text-[11px] text-white/60 capitalize">{{ Auth::user()->role ?? 'Petani' }}</span>
+                </div>
+            </div>
+            <form action="{{ route('logout') }}" method="POST">@csrf
+                <button type="submit"><i class="ph ph-sign-out text-white/50 hover:text-red-400 text-[20px]"></i></button>
+            </form>
+        </div>
+    </aside>
+
+    {{-- MAIN CONTENT --}}
+    <main class="flex-1 flex flex-col min-w-0 bg-[#EEEEEE] overflow-y-auto p-10">
+        
+        <h2 class="text-[28px] font-bold text-primary-dark mb-6">Laporan Pendapatan</h2>
+
+        {{-- KPI CARDS --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-[24px] shadow-sm border border-gray-100 flex flex-col justify-center">
+                <i class="ph ph-trend-up text-[28px] text-primary-dark mb-2"></i>
+                <h3 class="text-[24px] font-bold text-gray-900">Rp. {{ number_format($totalPendapatan, 0, ',', '.') }}</h3>
+                <p class="text-[14px] text-gray-500 font-medium">Total Pendapatan</p>
+            </div>
+            <div class="bg-white p-6 rounded-[24px] shadow-sm border border-gray-100 flex flex-col justify-center">
+                <i class="ph ph-trend-down text-[28px] text-primary-dark mb-2"></i>
+                <h3 class="text-[24px] font-bold text-gray-900">Rp. {{ number_format($totalBiaya, 0, ',', '.') }}</h3>
+                <p class="text-[14px] text-gray-500 font-medium">Total Biaya</p>
+            </div>
+            <div class="bg-white p-6 rounded-[24px] shadow-sm border border-gray-100 flex flex-col justify-center">
+                <i class="ph ph-arrows-out-line-up text-[28px] text-primary-dark mb-2"></i>
+                <h3 class="text-[24px] font-bold text-gray-900">Rp. {{ number_format($labaBersih, 0, ',', '.') }}</h3>
+                <p class="text-[14px] text-gray-500 font-medium">Laba Bersih</p>
+            </div>
+        </div>
+
+        {{-- PENCARIAN & EXPORT --}}
+        <div class="flex items-center justify-between mb-6">
+            <div class="relative w-[300px]">
+                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input type="text" placeholder="Cari nama lahan..." class="w-full border border-gray-200 rounded-[8px] pl-10 pr-3 py-2.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid shadow-sm">
+            </div>
+            <button onclick="window.print()" class="bg-primary-dark text-white px-5 py-2.5 rounded-[8px] font-bold text-[13px] hover:bg-opacity-90 transition flex items-center gap-2 shadow-sm">
+                <i class="ph ph-download-simple font-bold"></i> Export
             </button>
         </div>
-    </div>
 
-    <!-- Baris 1: 4 KPI Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div class="bg-white rounded-[16px] shadow-card p-6 border-b-4 border-blue-500">
-            <p class="text-sm text-gray-500 mb-1">Total Pendapatan</p>
-            <h3 class="text-2xl font-bold text-gray-800">Rp 45.8M</h3>
-        </div>
-        <div class="bg-white rounded-[16px] shadow-card p-6 border-b-4 border-red-500">
-            <p class="text-sm text-gray-500 mb-1">Total Biaya Operasional</p>
-            <h3 class="text-2xl font-bold text-gray-800">Rp 12.3M</h3>
-        </div>
-        <div class="bg-white rounded-[16px] shadow-card p-6 border-b-4 border-[#43B75D]">
-            <p class="text-sm text-gray-500 mb-1">Laba Bersih</p>
-            <h3 class="text-2xl font-bold text-[#065F46]">Rp 33.5M</h3>
-        </div>
-        <div class="bg-white rounded-[16px] shadow-card p-6 border-b-4 border-yellow-500">
-            <p class="text-sm text-gray-500 mb-1">Batch Terprofitabel</p>
-            <h3 class="text-xl font-bold text-gray-800">Batch #001 (Padi)</h3>
-        </div>
-    </div>
-
-    <!-- Baris 2: Area Chart -->
-    <div class="bg-white rounded-[16px] shadow-card p-6 mb-6">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Grafik Pendapatan vs Biaya</h3>
-        <div class="w-full h-64 bg-gray-100 rounded-[8px] flex items-center justify-center border border-dashed border-gray-300">
-            <span class="text-gray-400 font-medium">[Area Chart: Pendapatan vs Biaya]</span>
-        </div>
-    </div>
-
-    <!-- Baris 3: Donut Chart & Top 5 Batch -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <!-- Kiri: Donut Chart -->
-        <div class="bg-white rounded-[16px] shadow-card p-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Komposisi Biaya</h3>
-            <div class="w-full h-48 bg-gray-100 rounded-[8px] flex items-center justify-center border border-dashed border-gray-300">
-                <span class="text-gray-400 font-medium">[Donut Chart: Pupuk, Tenaga Kerja, Bibit, Dll]</span>
+        {{-- MAIN CHART: PENDAPATAN VS BIAYA --}}
+        <div class="bg-white p-8 rounded-[24px] shadow-sm border border-gray-100 mb-6">
+            <div class="flex items-center gap-6 mb-6 border-b border-gray-100 pb-2">
+                <h3 class="text-[15px] font-bold text-primary-dark border-b-2 border-primary-dark pb-2">Pendapatan vs Biaya</h3>
+                <h3 class="text-[15px] font-medium text-gray-400 pb-2 cursor-pointer hover:text-gray-600">Tren Bulanan</h3>
+            </div>
+            <div class="relative h-[300px] w-full">
+                <canvas id="barChart"></canvas>
             </div>
         </div>
-        <!-- Kanan: Top 5 Batch -->
-        <div class="bg-white rounded-[16px] shadow-card p-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-4">Top Batch Keuntungan</h3>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-                    <div>
-                        <p class="font-bold text-gray-800">1. Batch #001 (Padi Sawah)</p>
-                        <p class="text-xs text-gray-500">Selesai: 12 Ags 2026</p>
+
+        {{-- BOTTOM GRID: DOUGHNUT & TOP BATCH --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-10">
+            
+            {{-- Komposisi Biaya --}}
+            <div class="bg-white p-8 rounded-[24px] shadow-sm border border-gray-100 flex flex-col">
+                <h3 class="text-[16px] font-bold text-gray-900 mb-6">Komposisi Biaya</h3>
+                <div class="flex items-center justify-center gap-8 flex-1">
+                    <div class="relative w-[180px] h-[180px]">
+                        <canvas id="doughnutChart"></canvas>
                     </div>
-                    <span class="text-[#065F46] font-bold">+ Rp 10.500.000</span>
-                </div>
-                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-                    <div>
-                        <p class="font-bold text-gray-800">2. Batch #002 (Padi Sawah)</p>
-                        <p class="text-xs text-gray-500">Selesai: 28 Jul 2026</p>
+                    <div class="flex flex-col gap-3 w-1/2">
+                        <div class="flex justify-between items-center text-[13px] font-semibold text-gray-600"><span class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-[#004F3B]"></div> Pemupukan</span> <span>{{ $komposisiBiaya['Pemupukan'] }}%</span></div>
+                        <div class="flex justify-between items-center text-[13px] font-semibold text-gray-600"><span class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-[#43B75D]"></div> Pengendalian Hama</span> <span>{{ $komposisiBiaya['Pengendalian Hama'] }}%</span></div>
+                        <div class="flex justify-between items-center text-[13px] font-semibold text-gray-600"><span class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-[#F59E0B]"></div> Perawatan Lain</span> <span>{{ $komposisiBiaya['Perawatan Lain'] }}%</span></div>
+                        <div class="flex justify-between items-center text-[13px] font-semibold text-gray-600"><span class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-[#3B82F6]"></div> Pengairan</span> <span>{{ $komposisiBiaya['Pengairan'] }}%</span></div>
                     </div>
-                    <span class="text-[#065F46] font-bold">+ Rp 7.200.000</span>
-                </div>
-                <div class="flex justify-between items-center pb-2 border-b border-gray-100">
-                    <div>
-                        <p class="font-bold text-gray-800">3. Batch #005 (Bawang Merah)</p>
-                        <p class="text-xs text-gray-500">Selesai: 10 Mei 2026</p>
-                    </div>
-                    <span class="text-[#065F46] font-bold">+ Rp 6.800.000</span>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Baris 4: Tabel Rekap Per Batch -->
-    <div class="bg-white rounded-[16px] shadow-card overflow-hidden">
-        <div class="p-6 border-b border-gray-100">
-            <h3 class="text-lg font-bold text-gray-800">Rekapitulasi Per Batch</h3>
+            {{-- Top Batch Terprofitabel --}}
+            <div class="bg-white p-8 rounded-[24px] shadow-sm border border-gray-100">
+                <h3 class="text-[16px] font-bold text-gray-900 mb-6">Top Batch Terprofitabel</h3>
+                <div class="space-y-5">
+                    @forelse($topBatches as $index => $tb)
+                        @php 
+                            // Simulasi persentase margin acak untuk visualisasi bar hijau
+                            $margin = [65, 55, 60][$index] ?? 50; 
+                        @endphp
+                        <div class="flex gap-4 items-start">
+                            <div class="w-8 h-8 rounded-full bg-primary-dark text-white flex items-center justify-center font-bold text-[13px] shrink-0 mt-1">{{ $index + 1 }}</div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-end mb-1">
+                                    <div class="font-bold text-gray-900 text-[14px]">
+                                        {{ $tb->komoditas }} — {{ \Carbon\Carbon::parse($tb->tanggal_tanam)->translatedFormat('M y') }}
+                                        <span class="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded ml-1">{{ $tb->komoditas }}</span>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-[13px] font-bold text-primary-mid">Rp {{ number_format($tb->total_revenue, 0, ',', '.') }}</div>
+                                        <div class="text-[11px] text-gray-500">{{ $margin }}%</div>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-[6px]">
+                                    <div class="bg-primary-mid h-[6px] rounded-full" style="width: {{ $margin }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <p class="text-[13px] text-gray-400 text-center py-4">Belum ada data batch yang cukup.</p>
+                    @endforelse
+                </div>
+            </div>
+
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-primary-dark text-white font-semibold text-[14px]">
-                        <th class="p-4">ID Batch</th>
-                        <th class="p-4">Komoditas</th>
-                        <th class="p-4 text-right">Total Pendapatan</th>
-                        <th class="p-4 text-right">Total Biaya</th>
-                        <th class="p-4 text-right">Laba/Rugi</th>
-                        <th class="p-4 text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="p-4 text-sm font-bold text-primary-dark">#001</td>
-                        <td class="p-4 text-sm text-gray-700">Padi Sawah</td>
-                        <td class="p-4 text-sm text-right">Rp 14.700.000</td>
-                        <td class="p-4 text-sm text-right">Rp 4.200.000</td>
-                        <td class="p-4 text-sm text-right font-bold text-[#065F46]">+ Rp 10.500.000</td>
-                        <td class="p-4 text-center">
-                            <span class="bg-[#E0F2FE] text-[#0369A1] rounded-full px-2 py-0.5 text-[12px] font-semibold">Selesai</span>
-                        </td>
-                    </tr>
-                    <tr class="bg-gray-50 border-b border-gray-100 hover:bg-gray-100">
-                        <td class="p-4 text-sm font-bold text-primary-dark">#002</td>
-                        <td class="p-4 text-sm text-gray-700">Padi Sawah</td>
-                        <td class="p-4 text-sm text-right">Rp 10.440.000</td>
-                        <td class="p-4 text-sm text-right">Rp 3.240.000</td>
-                        <td class="p-4 text-sm text-right font-bold text-[#065F46]">+ Rp 7.200.000</td>
-                        <td class="p-4 text-center">
-                            <span class="bg-[#E0F2FE] text-[#0369A1] rounded-full px-2 py-0.5 text-[12px] font-semibold">Selesai</span>
-                        </td>
-                    </tr>
-                    <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="p-4 text-sm font-bold text-primary-dark">#003</td>
-                        <td class="p-4 text-sm text-gray-700">Jagung Manis</td>
-                        <td class="p-4 text-sm text-right">Rp 3.400.000</td>
-                        <td class="p-4 text-sm text-right">Rp 4.500.000</td>
-                        <td class="p-4 text-sm text-right font-bold text-[#991B1B]">- Rp 1.100.000</td>
-                        <td class="p-4 text-center">
-                            <span class="bg-[#FEE2E2] text-[#991B1B] rounded-full px-2 py-0.5 text-[12px] font-semibold">Rugi</span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</main>
-@endsection
+    </main>
+
+    {{-- SCRIPT CHART.JS CUSTOMIZATION --}}
+    <script>
+        Chart.defaults.font.family = "'Montserrat', sans-serif";
+        Chart.defaults.color = '#9CA3AF'; // Gray-400
+        
+        // 1. BAR CHART (Pendapatan vs Biaya vs Laba)
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: @json($labelBulan),
+                datasets: [
+                    {
+                        label: 'Pendapatan',
+                        data: @json($dataPendapatanBulan),
+                        backgroundColor: '#004F3B', // Dark Green
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.8
+                    },
+                    {
+                        label: 'Biaya',
+                        data: @json($dataBiayaBulan),
+                        backgroundColor: '#43B75D', // Light Green
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.8
+                    },
+                    {
+                        label: 'Laba',
+                        data: @json($dataLabaBulan),
+                        backgroundColor: '#FEF08A', // Yellow/Cream
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.8
+                    }
+                ]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        position: 'bottom',
+                        labels: { usePointStyle: true, boxWidth: 8, padding: 20, font: { weight: 'bold' } }
+                    } 
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { 
+                        grid: { borderDash: [4, 4], color: '#f3f4f6' },
+                        ticks: {
+                            callback: function(value) {
+                                if(value >= 1000000) return (value / 1000000) + 'M';
+                                if(value >= 1000) return (value / 1000) + 'K';
+                                return value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. DOUGHNUT CHART (Komposisi Biaya)
+        new Chart(document.getElementById('doughnutChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Pemupukan', 'Pengendalian Hama', 'Perawatan Lain', 'Pengairan'],
+                datasets: [{
+                    data: [
+                        {{ $komposisiBiaya['Pemupukan'] }}, 
+                        {{ $komposisiBiaya['Pengendalian Hama'] }}, 
+                        {{ $komposisiBiaya['Perawatan Lain'] }}, 
+                        {{ $komposisiBiaya['Pengairan'] }}
+                    ],
+                    backgroundColor: ['#004F3B', '#43B75D', '#F59E0B', '#3B82F6'],
+                    borderWidth: 0,
+                    hoverOffset: 5
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                cutout: '75%', // Ketebalan donat
+                plugins: { legend: { display: false } } // Legend dibuat manual di HTML
+            }
+        });
+    </script>
+</body>
+</html>
