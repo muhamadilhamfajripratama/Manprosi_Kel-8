@@ -12,6 +12,7 @@ use App\Http\Controllers\PemupukanController;
 use App\Http\Controllers\PenanamanController;
 use App\Http\Controllers\IrigasiController;
 use App\Http\Controllers\HamaController;
+use App\Http\Controllers\PanenController;
 
 
 // ==========================================
@@ -89,17 +90,23 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/pemupukan', [PemupukanController::class, 'index'])->name('pemupukan');
     Route::post('/pemupukan', [PemupukanController::class, 'store'])->name('pemupukan.store');
+    Route::put('/pemupukan/{id}', [App\Http\Controllers\PemupukanController::class, 'update'])->name('pemupukan.update');
+    Route::delete('/pemupukan/{id}', [App\Http\Controllers\PemupukanController::class, 'destroy'])->name('pemupukan.destroy');
     Route::get('/penanaman', [PenanamanController::class, 'index'])->name('penanaman');
     Route::post('/penanaman', [PenanamanController::class, 'store'])->name('penanaman.store');
     Route::get('/irigasi', [IrigasiController::class, 'index'])->name('irigasi');
     Route::post('/irigasi', [IrigasiController::class, 'store'])->name('irigasi.store');
     Route::get('/hama', [HamaController::class, 'index'])->name('hama');
     Route::post('/hama', [HamaController::class, 'store'])->name('hama.store');
+    Route::put('/hama/{id}', [HamaController::class, 'update'])->name('hama.update');
+    Route::delete('/hama/{id}', [HamaController::class, 'destroy'])->name('hama.destroy');
     Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi');
     Route::get('/perawatan', [App\Http\Controllers\PerawatanController::class, 'index'])->name('perawatan');
     Route::post('/perawatan', [App\Http\Controllers\PerawatanController::class, 'store'])->name('perawatan.store');
     Route::get('/panen', [App\Http\Controllers\PanenController::class, 'index'])->name('panen');
     Route::post('/panen', [App\Http\Controllers\PanenController::class, 'store'])->name('panen.store');
+    Route::put('/panen/{id}', [PanenController::class, 'update'])->name('panen.update');
+    Route::delete('/panen/{id}', [PanenController::class, 'destroy'])->name('panen.destroy');
     Route::get('/penjualan', [App\Http\Controllers\PenjualanController::class, 'index'])->name('penjualan');
     Route::post('/penjualan', [App\Http\Controllers\PenjualanController::class, 'store'])->name('penjualan.store');
     Route::get('/penjualan/invoice/{id}', [App\Http\Controllers\PenjualanController::class, 'invoice'])->name('penjualan.invoice');

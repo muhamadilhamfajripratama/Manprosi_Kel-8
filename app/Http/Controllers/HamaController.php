@@ -27,7 +27,7 @@ class HamaController extends Controller
             'batch_id'            => 'required',
             'tanggal'             => 'required|date',
             'jenis_hama'          => 'required|string',
-            'tingkat_keparahan'   => 'required|in:Ringan,Sedang,Berat', // Validasi Enum
+            'tingkat_keparahan'   => 'required|in:Ringan,Sedang,Berat', 
             'metode_pengendalian' => 'required|string',
             'bahan_pengendalian'  => 'required|string',
             'dosis'               => 'required|numeric',
@@ -49,5 +49,51 @@ class HamaController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Data pengendalian hama berhasil dicatat!');
+    }
+
+    // FUNGSI UPDATE DATA (BARU)
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'batch_id'            => 'required',
+            'tanggal'             => 'required|date',
+            'jenis_hama'          => 'required|string',
+            'tingkat_keparahan'   => 'required|in:Ringan,Sedang,Berat',
+            'metode_pengendalian' => 'required|string',
+            'bahan_pengendalian'  => 'required|string',
+            'dosis'               => 'required|numeric',
+            'satuan'              => 'required|string',
+            'harga_beli'          => 'required|numeric',
+        ]);
+
+        $hama = KegiatanHama::findOrFail($id);
+
+        $hama->update([
+            'batch_id'            => $request->batch_id,
+            'tanggal'             => $request->tanggal,
+            'jenis_hama'          => $request->jenis_hama,
+            'tingkat_keparahan'   => $request->tingkat_keparahan,
+            'metode_pengendalian' => $request->metode_pengendalian,
+            'bahan_pengendalian'  => $request->bahan_pengendalian,
+            'dosis'               => $request->dosis,
+            'satuan'              => $request->satuan,
+            'harga_beli'          => $request->harga_beli,
+            'catatan'             => $request->catatan,
+        ]);
+
+        return redirect()->back()->with('success', 'Data pengendalian hama berhasil diperbarui!');
+    }
+
+    // FUNGSI HAPUS DATA (BARU)
+    public function destroy($id)
+    {
+        try {
+            $hama = KegiatanHama::findOrFail($id);
+            $hama->delete();
+            
+            return redirect()->back()->with('success', 'Data pengendalian hama berhasil dihapus!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus data pengendalian hama.');
+        }
     }
 }

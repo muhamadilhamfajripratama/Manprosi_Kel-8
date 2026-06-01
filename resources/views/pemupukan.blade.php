@@ -129,54 +129,85 @@
 
                 {{-- TABEL RIWAYAT --}}
                 <div class="bg-white rounded-[16px] shadow-sm border border-gray-100 overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-primary-dark text-white text-[12px] font-semibold uppercase tracking-wider">
-                            <tr>
-                                <th class="px-5 py-4">Tanggal</th>
-                                <th class="px-5 py-4">Jenis Pupuk</th>
-                                <th class="px-5 py-4 text-center">Dosis</th>
-                                <th class="px-5 py-4">Harga Beli</th>
-                                <th class="px-5 py-4">Total Biaya</th>
-                                <th class="px-5 py-4 text-center">Aksi</th>
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-primary-dark text-white text-[12px] font-semibold uppercase tracking-wider">
+                        <tr>
+                            <th class="px-5 py-4 rounded-tl-lg">Tanggal</th>
+                            <th class="px-5 py-4">Jenis Pupuk</th>
+                            <th class="px-5 py-4 text-center">Dosis</th>
+                            <th class="px-5 py-4">Harga Beli</th>
+                            <th class="px-5 py-4">Total Biaya</th>
+                            <th class="px-5 py-4 text-center rounded-tr-lg">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-[13px] text-gray-700 divide-y divide-gray-100 bg-white">
+                        @forelse($riwayats as $rw)
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                {{-- 1. Kolom Tanggal --}}
+                                <td class="px-5 py-4 font-medium">
+                                    {{ \Carbon\Carbon::parse($rw->tanggal)->translatedFormat('d M Y') }}
+                                </td>
+                                
+                                {{-- 2. Kolom Jenis Pupuk --}}
+                                <td class="px-5 py-4">
+                                    <span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-green-50 text-green-600 border border-green-100">
+                                        {{ $rw->jenis_pupuk }}
+                                    </span>
+                                </td>
+                                
+                                {{-- 3. Kolom Dosis --}}
+                                <td class="px-5 py-4 text-center text-gray-600 font-semibold">
+                                    {{ $rw->dosis }} {{ $rw->satuan }}
+                                </td>
+                                
+                                {{-- 4. Kolom Harga Beli --}}
+                                <td class="px-5 py-4 text-gray-500">
+                                    Rp {{ number_format($rw->harga_beli, 0, ',', '.') }} / {{ $rw->satuan }}
+                                </td>
+                                
+                                {{-- 5. Kolom Total Biaya --}}
+                                <td class="px-5 py-4 font-bold text-gray-900">
+                                    Rp {{ number_format($rw->total_biaya, 0, ',', '.') }}
+                                </td>
+                                
+                                {{-- 6. Kolom Aksi (Tombol Edit & Delete Berada di Sini) --}}
+                                <td class="px-5 py-4 text-center">
+                                    <div class="flex items-center justify-center gap-1">
+                                        {{-- Tombol Edit --}}
+                                        <button type="button" 
+                                            onclick="editPemupukan(
+                                                {{ $rw->id }}, 
+                                                {{ $rw->batch_id }}, 
+                                                '{{ $rw->tanggal }}', 
+                                                '{{ addslashes($rw->jenis_pupuk) }}', 
+                                                '{{ $rw->dosis }}', 
+                                                '{{ addslashes($rw->satuan) }}', 
+                                                '{{ $rw->harga_beli }}', 
+                                                '{{ addslashes($rw->nomide) }}', 
+                                                '{{ addslashes($rw->catatan) }}'
+                                            )" 
+                                            class="text-amber-500 hover:bg-amber-50 p-1.5 rounded-md transition" title="Edit">
+                                            <i class="ph ph-pencil-simple text-lg"></i>
+                                        </button>
+
+                                        {{-- Tombol Delete --}}
+                                        <form action="{{ route('pemupukan.destroy', $rw->id) }}" method="POST" class="inline-block form-delete">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button" class="text-red-500 hover:bg-red-50 p-1.5 rounded-md transition btn-hapus" title="Hapus">
+                                                <i class="ph ph-trash text-lg"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody class="text-[13px] text-gray-700 divide-y divide-gray-100">
-                            @forelse($riwayats as $rw)
-                                <tr class="hover:bg-gray-50">
-                                    {{-- Format Tanggal agar lebih cantik (misal: 17 Mei 2026) --}}
-                                    <td class="px-5 py-4 font-medium">{{ \Carbon\Carbon::parse($rw->tanggal)->translatedFormat('d M Y') }}</td>
-                                    
-                                    <td class="px-5 py-4">
-                                        <span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-green-50 text-green-600 border border-green-100">
-                                            {{ $rw->jenis_pupuk }}
-                                        </span>
-                                    </td>
-                                    
-                                    <td class="px-5 py-4 text-center text-gray-600 font-semibold">
-                                        {{ $rw->dosis }} {{ $rw->satuan }}
-                                    </td>
-                                    
-                                    {{-- PERBAIKAN: Memanggil nama variabel yang sesuai dengan Model --}}
-                                    <td class="px-5 py-4 text-gray-500">
-                                        Rp {{ number_format($rw->harga_beli, 0, ',', '.') }} / {{ $rw->satuan }}
-                                    </td>
-                                    
-                                    <td class="px-5 py-4 font-bold text-gray-900">
-                                        Rp {{ number_format($rw->total_biaya, 0, ',', '.') }}
-                                    </td>
-                                    
-                                    <td class="px-5 py-4 text-center text-gray-400">
-                                        <button class="hover:text-blue-500 mr-2 transition"><i class="ph ph-pencil-simple text-lg"></i></button>
-                                        <button class="hover:text-red-500 transition"><i class="ph ph-trash text-lg"></i></button>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="px-5 py-10 text-center text-gray-400">Belum ada riwayat pemupukan.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-5 py-10 text-center text-gray-400 font-medium">Belum ada riwayat pemupukan.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
                 </div>
 
             </div>
@@ -196,7 +227,7 @@
             </div>
 
             {{-- Body Modal --}}
-            <form action="{{ route('pemupukan.store') }}" method="POST" class="p-6 max-h-[85vh] overflow-y-auto">
+<form action="{{ route('pemupukan.store') }}" method="POST" id="formPemupukan" class="p-6 max-h-[85vh] overflow-y-auto">
                 @csrf
 
                 {{-- 1. Pilih Batch --}}
@@ -288,6 +319,100 @@
             // Update UI dengan format mata uang
             document.getElementById('out-total').innerText = totalBiaya.toLocaleString('id-ID');
         }
+    </script>
+
+    {{-- Script SweetAlert & Edit Modal --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // 1. Logika Konfirmasi Hapus
+        document.querySelectorAll('.btn-hapus').forEach(button => {
+            button.addEventListener('click', function() {
+                const form = this.closest('.form-delete');
+                Swal.fire({
+                    title: 'Hapus Catatan?',
+                    text: "Data pemupukan ini akan dihapus permanen!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#9CA3AF',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                })
+            });
+        });
+
+        // 2. Logika Buka Modal Edit
+        function editPemupukan(id, batchId, tanggal, jenis, dosis, satuan, harga, nomide, catatan) {
+            // 1. Buka modal pengisian
+            if (typeof bukaModalCatat === "function") {
+                bukaModalCatat();
+            }
+            
+            // 2. Ubah rute action Form ke rute Update/Edit
+            const form = document.getElementById('formFormPemupukan') || document.getElementById('formPemupukan');
+            if (form) {
+                form.action = `/pemupukan/${id}`;
+                
+                // Sisipkan method PUT agar Laravel tahu ini proses UPDATE data
+                let methodInput = document.getElementById('method-put');
+                if(!methodInput) {
+                    form.insertAdjacentHTML('beforeend', '<input type="hidden" name="_method" value="PUT" id="method-put">');
+                }
+            }
+
+            // 3. Cari semua elemen input di dalam modal berdasarkan atribut 'name'
+            const inputBatch   = document.querySelector('[name="batch_id"]');
+            const inputTanggal = document.querySelector('[name="tanggal"]');
+            const inputJenis   = document.querySelector('[name="jenis_pupuk"]');
+            const inputDosis   = document.querySelector('[name="dosis"]');
+            const inputSatuan  = document.querySelector('[name="satuan"]');
+            const inputHarga   = document.querySelector('[name="harga_beli"]');
+            const inputNomide  = document.querySelector('[name="nomide"]');
+            const inputCatatan = document.querySelector('[name="catatan"]');
+
+            // 4. Isi otomatis tiap kolom input dengan data lamanya
+            if (inputBatch)   inputBatch.value = batchId;
+            if (inputTanggal) inputTanggal.value = tanggal;
+            if (inputJenis)   inputJenis.value = jenis;
+            if (inputDosis)   inputDosis.value = dosis;
+            if (inputSatuan)  inputSatuan.value = satuan;
+            if (inputHarga)   inputHarga.value = harga;
+            if (inputNomide)  inputNomide.value = nomide;
+            if (inputCatatan) inputCatatan.value = catatan;
+
+            // 5. Trik Otomatis: Hitung perkalian Dosis x Harga agar teks hijau "TOTAL BIAYA" langsung terisi otomatis
+            setTimeout(() => {
+                // Jika kamu punya fungsi hitung biaya bawaan di form, kita pancing panggil di sini
+                if (typeof hitungTotalBiaya === "function") {
+                    hitungTotalBiaya();
+                } else {
+                    // Kalkulasi manual cadangan untuk teks hijau di modal kamu
+                    let vDosis = parseFloat(dosis) || 0;
+                    let vHarga = parseFloat(harga) || 0;
+                    let totalVal = vDosis * vHarga;
+                    
+                    // Mencari elemen teks hijau tempat "TOTAL BIAYA PUPUK" berada
+                    let textTotal = document.body.innerHTML.match(/TOTAL BIAYA PUPUK/i);
+                    if(textTotal) {
+                        // Jika kamu memberikan ID/Class pada teks Rp di modal, isi valuenya di sini
+                        // Contoh fungsional jika dipasangkan selector pendukung:
+                        let displayTotal = document.getElementById('total-biaya-display') || inputHarga.closest('div').querySelector('.text-primary-mid');
+                        if(displayTotal) displayTotal.innerText = 'Rp ' + totalVal.toLocaleString('id-ID');
+                    }
+                }
+            }, 100);
+        }
+        // 3. Tangkap Notifikasi
+        @if(session('success'))
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: "{{ session('success') }}", timer: 3000, showConfirmButton: false });
+        @endif
+        @if(session('error'))
+            Swal.fire({ icon: 'error', title: 'Oops...', text: "{{ session('error') }}" });
+        @endif
     </script>
 </body>
 </html>

@@ -133,10 +133,33 @@
                                     <span>&bull;</span>
                                     <span>{{ \Carbon\Carbon::parse($rw->tanggal)->translatedFormat('d M Y') }}</span>
                                 </div>
-                                <div class="flex gap-2 text-gray-300">
-                                    <button class="hover:text-blue-500 transition"><i class="ph ph-pencil-simple text-lg"></i></button>
-                                    <button class="hover:text-red-500 transition"><i class="ph ph-trash text-lg"></i></button>
-                                </div>
+<div class="flex gap-2 text-gray-300">
+    {{-- Tombol Edit menggunakan Data Attributes (Aman dari sytax error JS) --}}
+    <button type="button" 
+        class="hover:text-blue-500 transition btn-edit-hama"
+        data-id="{{ $rw->id }}"
+        data-batch="{{ $rw->batch_id }}"
+        data-tanggal="{{ $rw->tanggal }}"
+        data-jenis="{{ $rw->jenis_hama }}"
+        data-keparahan="{{ $rw->tingkat_keparahan }}"
+        data-metode="{{ $rw->metode_pengendalian }}"
+        data-bahan="{{ $rw->bahan_pengendalian }}"
+        data-dosis="{{ $rw->dosis }}"
+        data-satuan="{{ $rw->satuan }}"
+        data-harga="{{ $rw->harga_beli }}"
+        data-catatan="{{ $rw->catatan }}">
+        <i class="ph ph-pencil-simple text-lg"></i>
+    </button>
+
+    {{-- Tombol Delete --}}
+    <form action="{{ route('hama.destroy', $rw->id) }}" method="POST" class="inline form-delete-hama">
+        @csrf
+        @method('DELETE')
+        <button type="button" class="hover:text-red-500 transition btn-hapus-hama">
+            <i class="ph ph-trash text-lg"></i>
+        </button>
+    </form>
+</div>
                             </div>
                             
                             {{-- Nama Hama --}}
@@ -273,17 +296,100 @@
         </div>
     </div>
 
-    <script>
-        const modal = document.getElementById('modalHama');
-        function bukaModalHama() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
-        function tutupModalHama() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
-
-        function hitungTotalHama() {
-            let dosis = parseFloat(document.getElementById('inp-dosis').value) || 0;
-            let harga = parseFloat(document.getElementById('inp-harga').value) || 0;
-            let totalBiaya = dosis * harga;
-            document.getElementById('out-total').innerText = totalBiaya.toLocaleString('id-ID');
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const modal = document.getElementById('modalHama');
+    
+    function bukaModalHama() { 
+        modal.classList.remove('hidden'); 
+        modal.classList.add('flex'); 
+    }
+    
+    function tutupModalHama() { 
+        modal.classList.add('hidden'); 
+        modal.classList.remove('flex'); 
+        const form = document.getElementById('formHama');
+        if(form) {
+            form.action = "{{ route('hama.store') }}";
+            form.reset();
+            const methodInput = document.getElementById('method-put-hama');
+            if(methodInput) methodInput.remove();
+            document.getElementById('out-total').innerText = '0';
         }
-    </script>
+    }
+
+    // Kalkulator Biaya Otomatis
+    function hitungTotalHama() {
+        let dosis = parseFloat(document.getElementById('inp-dosis').value) || 0;
+        let harga = parseFloat(document.getElementById('inp-harga').value) || 0;
+        let totalBiaya = dosis * harga;
+        document.getElementById('out-total').innerText = totalBiaya.toLocaleString('id-ID');
+    }
+
+    // LOGIKA EDIT: Menangkap Klik dari Atribut Data
+    document.querySelectorAll('.btn-edit-hama').forEach(button => {
+        button.addEventListener('click', function() {
+            bukaModalHama();
+            
+            // Ambil semua data dari atribut tombol yang diklik
+            const id = this.dataset.id;
+            const form = document.getElementById('formHama');
+            
+            if (form) {
+                form.action = `/hama/${id}`;
+                let methodInput = document.getElementById('method-put-hama');
+                if(!methodInput) {
+                    form.insertAdjacentHTML('beforeend', '<input type="hidden" name="_method" value="PUT" id="method-put-hama">');
+                }
+            }
+
+            // Isikan data ke input modal
+            if(document.querySelector('[name="batch_id"]'))         document.querySelector('[name="batch_id"]').value = this.dataset.batch;
+            if(document.querySelector('[name="tanggal"]'))          document.querySelector('[name="tanggal"]').value = this.dataset.tanggal;
+            if(document.querySelector('[name="jenis_hama"]'))        document.querySelector('[name="jenis_hama"]').value = this.dataset.jenis;
+            if(document.querySelector('[name="tingkat_keparahan"]')) document.querySelector('[name="tingkat_keparahan"]').value = this.dataset.keparahan;
+            if(document.querySelector('[name="metode_pengendalian"]')) document.querySelector('[name="metode_pengendalian"]').value = this.dataset.metode;
+            if(document.querySelector('[name="bahan_pengendalian"]'))  document.querySelector('[name="bahan_pengendalian"]').value = this.dataset.bahan;
+            if(document.querySelector('[name="dosis"]'))            document.querySelector('[name="dosis"]').value = this.dataset.dosis;
+            if(document.querySelector('[name="satuan"]'))           document.querySelector('[name="satuan"]').value = this.dataset.satuan;
+            if(document.querySelector('[name="harga_beli"]'))       document.querySelector('[name="harga_beli"]').value = this.dataset.harga;
+            if(document.querySelector('[name="catatan"]'))          document.querySelector('[name="catatan"]').value = this.dataset.catatan;
+
+            // Hitung ulang total harga pupuk/pestisida di dalam modal
+            hitungTotalHama();
+        });
+    });
+
+    // LOGIKA SWEETALERT: Konfirmasi Hapus
+    document.querySelectorAll('.btn-hapus-hama').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('.form-delete-hama');
+            Swal.fire({
+                title: 'Hapus Catatan Hama?',
+                text: "Data riwayat hama ini akan dihapus permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#9CA3AF',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            })
+        });
+    });
+
+    // Tampilkan Alert Flash Session jika ada
+    @if(session('success'))
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: "{{ session('success') }}", timer: 3000, showConfirmButton: false });
+    @endif
+    @if(session('error'))
+        Swal.fire({ icon: 'error', title: 'Gagal!', text: "{{ session('error') }}" });
+    @endif
+</script>
 </body>
 </html>

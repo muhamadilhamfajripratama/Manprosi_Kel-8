@@ -150,6 +150,14 @@
                                         <div class="flex items-center gap-2">
                                             <a href="{{ route('lahan.show', $lahan) }}" class="w-8 h-8 rounded-[6px] bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition"><i class="ph ph-eye"></i></a>
                                             <a href="{{ route('lahan.edit', $lahan) }}" class="w-8 h-8 rounded-[6px] bg-amber-50 text-amber-600 flex items-center justify-center hover:bg-amber-100 transition"><i class="ph ph-pencil"></i></a>
+
+                                            <form action="{{ route('lahan.destroy', $lahan) }}" method="POST" class="inline-block form-delete">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" class="w-8 h-8 rounded-[6px] bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition btn-hapus" title="Hapus Lahan">
+                                                    <i class="ph ph-trash"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -376,6 +384,39 @@
             }
         </script>
     @endif
+            
+    {{-- TAMBAHKAN SCRIPT INI TEPAT DI SINI (Sebelum tag body tutup) --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Logika pop-up konfirmasi hapus lahan
+        document.querySelectorAll('.btn-hapus').forEach(button => {
+            button.addEventListener('click', function() {
+                const form = this.closest('.form-delete');
+                Swal.fire({
+                    title: 'Hapus Lahan?',
+                    text: "Data lahan yang dihapus tidak dapat dikembalikan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#9CA3AF',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                })
+            });
+        });
 
+        // Tangkap pesan sukses/gagal dari session LahanController
+        @if(session('success'))
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: "{{ session('success') }}", timer: 3000, showConfirmButton: false });
+        @endif
+        @if(session('error'))
+            Swal.fire({ icon: 'error', title: 'Ditolak!', text: "{{ session('error') }}" });
+        @endif
+    </script>
 </body>
 </html>

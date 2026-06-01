@@ -57,4 +57,42 @@ class PemupukanController extends Controller
 
         return redirect()->back()->with('success', 'Data pemupukan berhasil dicatat!');
     }
+
+    // Mengupdate data saat tombol simpan edit diklik
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'tanggal'     => 'required|date',
+            'jenis_pupuk' => 'required|string',
+            'dosis'       => 'required|numeric',
+            'harga_beli'  => 'required|numeric',
+        ]);
+
+        $pemupukan = KegiatanPemupukan::findOrFail($id);
+
+        $pemupukan->update([
+            'tanggal'     => $request->tanggal,
+            'jenis_pupuk' => $request->jenis_pupuk,
+            'dosis'       => $request->dosis,
+            'satuan'      => $request->satuan ?? 'Kg',
+            'harga_beli'  => $request->harga_beli,
+            'nomide'      => $request->nomide,
+            'catatan'     => $request->catatan,
+        ]);
+
+        return redirect()->back()->with('success', 'Data pemupukan berhasil diperbarui!');
+    }
+
+    // Menghapus data saat konfirmasi SweetAlert disetujui
+    public function destroy($id)
+    {
+        try {
+            $pemupukan = KegiatanPemupukan::findOrFail($id);
+            $pemupukan->delete();
+            
+            return redirect()->back()->with('success', 'Data pemupukan berhasil dihapus!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menghapus data.');
+        }
+    }
 }

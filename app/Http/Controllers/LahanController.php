@@ -63,11 +63,18 @@ class LahanController extends Controller
                          ->with('success', 'Data lahan berhasil diperbarui.');
     }
 
-    public function destroy(Lahan $lahan)
+    public function destroy($id)
     {
-        $lahan->delete();
-
-        return redirect()->route('lahan.index')
-                         ->with('success', 'Data lahan berhasil dihapus.');
+        try {
+            $lahan = \App\Models\Lahan::findOrFail($id);
+            $lahan->delete();
+            
+            return redirect()->route('lahan.index')->with('success', 'Data lahan berhasil dihapus!');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Error ini biasanya muncul jika ada constraint foreign key (lahan masih dipakai di Batch Tanam)
+            return redirect()->route('lahan.index')->with('error', 'Gagal menghapus! Lahan ini masih memiliki data riwayat tanam yang terhubung.');
+        } catch (\Exception $e) {
+            return redirect()->route('lahan.index')->with('error', 'Terjadi kesalahan saat menghapus data lahan.');
+        }
     }
 }
