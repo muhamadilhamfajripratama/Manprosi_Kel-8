@@ -138,10 +138,28 @@
                                 <h4 class="text-[13px] font-bold text-gray-900">
                                     {{ \Carbon\Carbon::parse($rw->tanggal)->translatedFormat('l, d M Y') }}
                                 </h4>
-                                <div class="flex gap-2 text-gray-400">
-                                    <button class="hover:text-blue-500 transition"><i class="ph ph-pencil-simple text-lg"></i></button>
-                                    <button class="hover:text-red-500 transition"><i class="ph ph-trash text-lg"></i></button>
-                                </div>
+<div class="flex gap-2 text-gray-300">
+    {{-- Tombol Edit Menggunakan Data Attributes (Aman & Rapih) --}}
+    <button type="button" 
+        class="hover:text-blue-500 transition btn-edit-irigasi"
+        data-id="{{ $rw->id }}"
+        data-batch="{{ $rw->batch_id }}"
+        data-tanggal="{{ $rw->tanggal }}"
+        data-volume="{{ $rw->debit_liter }}"
+        data-sumber="{{ $rw->sumber_pengairan }}"
+        data-catatan="{{ $rw->catatan }}">
+        <i class="ph ph-pencil-simple text-lg"></i>
+    </button>
+
+    {{-- Tombol Delete Terproteksi --}}
+    <form action="{{ route('irigasi.destroy', $rw->id) }}" method="POST" class="inline form-delete-irigasi">
+        @csrf
+        @method('DELETE')
+        <button type="button" class="hover:text-red-500 transition btn-hapus-irigasi">
+            <i class="ph ph-trash text-lg"></i>
+        </button>
+    </form>
+</div>
                             </div>
                             
                             {{-- Body Kartu (Volume) --}}
@@ -181,7 +199,7 @@
                 <button onclick="tutupModalIrigasi()" class="text-white/70 hover:text-white"><i class="ph ph-x text-xl"></i></button>
             </div>
 
-            <form action="{{ route('irigasi.store') }}" method="POST" class="p-6">
+            <form action="{{ route('irigasi.store') }}" method="POST" id="formIrigasi" class="p-6">
                 @csrf
                 
                 <div class="mb-4">
@@ -223,10 +241,104 @@
         </div>
     </div>
 
+{{-- Script Validasi & Interaksi Irigasi --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        const modal = document.getElementById('modalIrigasi');
-        function bukaModalIrigasi() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
-        function tutupModalIrigasi() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        function dapatkanModalIrigasi() {
+            return document.getElementById('modalIrigasi') || document.querySelector('[id*="modal"]');
+        }
+
+        // BUKA MODAL
+        function bukaModalIrigasi() {
+            const modal = dapatkanModalIrigasi();
+            if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+        }
+        function bukaModal() { bukaModalIrigasi(); }
+
+        // TUTUP MODAL & RESET
+        function tutupModalIrigasi() {
+            const modal = dapatkanModalIrigasi();
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+            
+            const form = document.getElementById('formIrigasi');
+            if (form) {
+                form.action = "{{ route('irigasi.store') }}";
+                form.reset();
+                const methodInput = document.getElementById('method-put-irigasi');
+                if (methodInput) methodInput.remove();
+            }
+        }
+        function tutupModal() { tutupModalIrigasi(); }
+
+        // LOGIKA EDIT: Tangkap Klik & Isi Modal
+        document.querySelectorAll('.btn-edit-irigasi').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                bukaModalIrigasi();
+                
+                const id = this.dataset.id;
+                const form = document.getElementById('formIrigasi');
+                
+                if (form) {
+                    form.action = `/irigasi/${id}`;
+                    let methodInput = document.getElementById('method-put-irigasi');
+                    if(!methodInput) {
+                        form.insertAdjacentHTML('beforeend', '<input type="hidden" name="_method" value="PUT" id="method-put-irigasi">');
+                    }
+                }
+
+                // PERBAIKAN: Menyesuaikan atribut name dengan form HTML kamu
+                if(document.querySelector('[name="batch_id"]'))         document.querySelector('[name="batch_id"]').value = this.dataset.batch;
+                if(document.querySelector('[name="tanggal"]'))          document.querySelector('[name="tanggal"]').value = this.dataset.tanggal;
+                if(document.querySelector('[name="debit_liter"]'))      document.querySelector('[name="debit_liter"]').value = this.dataset.volume;
+                if(document.querySelector('[name="sumber_pengairan"]')) document.querySelector('[name="sumber_pengairan"]').value = this.dataset.sumber;
+                if(document.querySelector('[name="catatan"]'))          document.querySelector('[name="catatan"]').value = this.dataset.catatan;
+            });
+        });
+
+        // LOGIKA DELETE: SweetAlert2
+        document.querySelectorAll('.btn-hapus-irigasi').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const form = this.closest('.form-delete-irigasi');
+                Swal.fire({
+                    title: 'Hapus Riwayat?',
+                    text: "Data pengairan ini akan dihapus dari sistem!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#9CA3AF',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed && form) {
+                        form.submit();
+                    }
+                })
+            });
+        });
+        
+        // PERBAIKAN ALERT: Dibungkus DOMContentLoaded agar jalan sempurna saat halaman di-load
+        document.addEventListener("DOMContentLoaded", function() {
+            @if(session('success'))
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Berhasil!', 
+                    text: "{!! session('success') !!}", 
+                    timer: 3000, 
+                    showConfirmButton: false 
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Gagal!', 
+                    text: "{!! session('error') !!}" 
+                });
+            @endif
+        });
     </script>
 </body>
 </html>

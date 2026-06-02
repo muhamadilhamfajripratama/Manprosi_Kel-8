@@ -13,6 +13,7 @@ use App\Http\Controllers\PenanamanController;
 use App\Http\Controllers\IrigasiController;
 use App\Http\Controllers\HamaController;
 use App\Http\Controllers\PanenController;
+use App\Http\Controllers\PerawatanController;
 
 
 // ==========================================
@@ -96,6 +97,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/penanaman', [PenanamanController::class, 'store'])->name('penanaman.store');
     Route::get('/irigasi', [IrigasiController::class, 'index'])->name('irigasi');
     Route::post('/irigasi', [IrigasiController::class, 'store'])->name('irigasi.store');
+    Route::put('/irigasi/{id}', [IrigasiController::class, 'update'])->name('irigasi.update');
+    Route::delete('/irigasi/{id}', [IrigasiController::class, 'destroy'])->name('irigasi.destroy');
     Route::get('/hama', [HamaController::class, 'index'])->name('hama');
     Route::post('/hama', [HamaController::class, 'store'])->name('hama.store');
     Route::put('/hama/{id}', [HamaController::class, 'update'])->name('hama.update');
@@ -103,6 +106,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi');
     Route::get('/perawatan', [App\Http\Controllers\PerawatanController::class, 'index'])->name('perawatan');
     Route::post('/perawatan', [App\Http\Controllers\PerawatanController::class, 'store'])->name('perawatan.store');
+    Route::put('/perawatan/{id}', [PerawatanController::class, 'update'])->name('perawatan.update');
+    Route::delete('/perawatan/{id}', [PerawatanController::class, 'destroy'])->name('perawatan.destroy');
     Route::get('/panen', [App\Http\Controllers\PanenController::class, 'index'])->name('panen');
     Route::post('/panen', [App\Http\Controllers\PanenController::class, 'store'])->name('panen.store');
     Route::put('/panen/{id}', [PanenController::class, 'update'])->name('panen.update');

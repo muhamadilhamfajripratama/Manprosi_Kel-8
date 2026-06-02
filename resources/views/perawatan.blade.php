@@ -155,10 +155,33 @@
                                     <td class="px-5 py-4 text-gray-500">{{ $rw->deskripsi ?? '-' }}</td>
                                     <td class="px-5 py-4 text-center">{{ $rw->jumlah_jam }} jam</td>
                                     <td class="px-5 py-4 font-bold text-primary-dark whitespace-nowrap">Rp {{ number_format($rw->biaya, 0, ',', '.') }}</td>
-                                    <td class="px-5 py-4 text-center text-gray-400 whitespace-nowrap">
-                                        <button class="hover:text-blue-500 transition mr-2"><i class="ph ph-pencil-simple text-lg"></i></button>
-                                        <button class="hover:text-red-500 transition"><i class="ph ph-trash text-lg"></i></button>
-                                    </td>
+<td class="px-5 py-4 text-center text-gray-400 whitespace-nowrap">
+    <div class="flex items-center justify-center gap-2">
+        {{-- Tombol Edit Menggunakan Data Attributes Asli --}}
+        <button type="button" 
+            class="hover:text-blue-500 transition btn-edit-perawatan"
+            data-id="{{ $rw->id }}"
+            data-batch="{{ $rw->batch_id }}"
+            data-tanggal="{{ $rw->tanggal }}"
+            data-jenis="{{ $rw->jenis }}"
+            data-deskripsi="{{ $rw->deskripsi }}"
+            data-jam="{{ $rw->jumlah_jam }}"
+            data-price="{{ $rw->price }}"
+            data-biaya="{{ $rw->biaya }}"
+            data-catatan="{{ $rw->catatan }}">
+            <i class="ph ph-pencil-simple text-lg"></i>
+        </button>
+
+        {{-- Tombol Delete --}}
+        <form action="{{ route('perawatan.destroy', $rw->id) }}" method="POST" class="inline form-delete-perawatan">
+            @csrf
+            @method('DELETE')
+            <button type="button" class="hover:text-red-500 transition btn-hapus-perawatan">
+                <i class="ph ph-trash text-lg"></i>
+            </button>
+        </form>
+    </div>
+</td>
                                 </tr>
                             @empty
                                 <tr>
@@ -188,7 +211,7 @@
                 <button onclick="tutupModal()" class="text-white/70 hover:text-white"><i class="ph ph-x text-xl"></i></button>
             </div>
             
-            <form action="{{ route('perawatan.store') }}" method="POST" class="p-6 max-h-[85vh] overflow-y-auto">
+            <form action="{{ route('perawatan.store') }}" method="POST" id="formPerawatan" class="p-6 max-h-[85vh] overflow-y-auto">
                 @csrf
                 <div class="mb-4">
                     <label class="block text-[12px] font-bold text-gray-500 mb-1">Batch Tanam <span class="text-red-500">*</span></label>
@@ -254,11 +277,10 @@
         </div>
     </div>
     
+{{-- Script Validasi, Kalkulator, & Interaksi Perawatan --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        const modal = document.getElementById('modalPerawatan');
-        function bukaModal() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
-        function tutupModal() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
-        
+        // FUNGSI KALKULATOR OTOMATIS (Bawaan aslimu)
         function hitung() {
             let jam = parseFloat(document.getElementById('inp-jam').value) || 0;
             let price = parseFloat(document.getElementById('inp-price').value) || 0;
@@ -266,6 +288,98 @@
             document.getElementById('out-total').innerText = total.toLocaleString('id-ID');
             document.getElementById('inp-biaya').value = total;
         }
+
+        function dapatkanModalPerawatan() {
+            return document.getElementById('modalPerawatan') || document.querySelector('[id*="modal"]');
+        }
+
+        // BUKA MODAL
+        function bukaModalPerawatan() {
+            const modal = dapatkanModalPerawatan();
+            if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+        }
+        function bukaModal() { bukaModalPerawatan(); }
+
+        // TUTUP MODAL & RESET
+        function tutupModalPerawatan() {
+            const modal = dapatkanModalPerawatan();
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+            
+            const form = document.getElementById('formPerawatan');
+            if (form) {
+                form.action = "{{ route('perawatan.store') }}";
+                form.reset();
+                const methodInput = document.getElementById('method-put-perawatan');
+                if (methodInput) methodInput.remove();
+            }
+            // Reset kalkulator ke 0
+            document.getElementById('out-total').innerText = '0';
+        }
+        function tutupModal() { tutupModalPerawatan(); }
+
+        // LOGIKA EDIT: Tangkap Klik & Isi Modal
+        document.querySelectorAll('.btn-edit-perawatan').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                bukaModalPerawatan();
+                
+                const id = this.dataset.id;
+                const form = document.getElementById('formPerawatan');
+                
+                if (form) {
+                    form.action = `/perawatan/${id}`;
+                    let methodInput = document.getElementById('method-put-perawatan');
+                    if(!methodInput) {
+                        form.insertAdjacentHTML('beforeend', '<input type="hidden" name="_method" value="PUT" id="method-put-perawatan">');
+                    }
+                }
+
+                // Tembakkan nilai ke input form
+                if(document.querySelector('[name="batch_id"]'))   document.querySelector('[name="batch_id"]').value = this.dataset.batch;
+                if(document.querySelector('[name="tanggal"]'))    document.querySelector('[name="tanggal"]').value = this.dataset.tanggal;
+                if(document.querySelector('[name="jenis"]'))      document.querySelector('[name="jenis"]').value = this.dataset.jenis;
+                if(document.querySelector('[name="deskripsi"]'))  document.querySelector('[name="deskripsi"]').value = this.dataset.deskripsi;
+                if(document.querySelector('[name="jumlah_jam"]')) document.querySelector('[name="jumlah_jam"]').value = this.dataset.jam;
+                if(document.querySelector('[name="price"]'))      document.querySelector('[name="price"]').value = this.dataset.price;
+                if(document.querySelector('[name="catatan"]'))    document.querySelector('[name="catatan"]').value = this.dataset.catatan;
+                
+                // Memicu hitung() agar teks "Total Biaya: Rp xxx" langsung muncul di modal
+                hitung();
+            });
+        });
+
+        // LOGIKA DELETE: SweetAlert2
+        document.querySelectorAll('.btn-hapus-perawatan').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const form = this.closest('.form-delete-perawatan');
+                Swal.fire({
+                    title: 'Hapus Data Perawatan?',
+                    text: "Data ini akan dihapus permanen dari sistem!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#9CA3AF',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed && form) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+
+        // Tampilkan Flash Message Notifikasi
+        document.addEventListener("DOMContentLoaded", function() {
+            @if(session('success'))
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: "{!! session('success') !!}", timer: 3000, showConfirmButton: false });
+            @endif
+            @if(session('error'))
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: "{!! session('error') !!}" });
+            @endif
+        });
     </script>
 </body>
 </html>
