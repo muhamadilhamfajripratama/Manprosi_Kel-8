@@ -89,12 +89,33 @@ Route::middleware('auth')->group(function () {
         return view('peta_gis', compact('lahans'));
     })->name('peta.gis');
 
+    Route::get('/profil', function () {
+        return view('profil');
+    })->name('profil');
+
+    Route::put('/profil', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
+        ]);
+
+        $user = auth()->user();
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->save();
+
+        return redirect()->back()->with('success', 'Data profil berhasil diperbarui!');
+    })->name('profil.update');
+
     Route::get('/pemupukan', [PemupukanController::class, 'index'])->name('pemupukan');
     Route::post('/pemupukan', [PemupukanController::class, 'store'])->name('pemupukan.store');
     Route::put('/pemupukan/{id}', [App\Http\Controllers\PemupukanController::class, 'update'])->name('pemupukan.update');
     Route::delete('/pemupukan/{id}', [App\Http\Controllers\PemupukanController::class, 'destroy'])->name('pemupukan.destroy');
     Route::get('/penanaman', [PenanamanController::class, 'index'])->name('penanaman');
     Route::post('/penanaman', [PenanamanController::class, 'store'])->name('penanaman.store');
+    Route::put('/penanaman/{id}', [PenanamanController::class, 'update'])->name('penanaman.update');
+    Route::delete('/penanaman/{id}', [PenanamanController::class, 'destroy'])->name('penanaman.destroy');
+    Route::get('/penanaman/detail/{id}', [PenanamanController::class, 'show'])->name('penanaman.detail');
     Route::get('/irigasi', [IrigasiController::class, 'index'])->name('irigasi');
     Route::post('/irigasi', [IrigasiController::class, 'store'])->name('irigasi.store');
     Route::put('/irigasi/{id}', [IrigasiController::class, 'update'])->name('irigasi.update');
@@ -116,7 +137,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/penjualan', [App\Http\Controllers\PenjualanController::class, 'store'])->name('penjualan.store');
     Route::get('/penjualan/invoice/{id}', [App\Http\Controllers\PenjualanController::class, 'invoice'])->name('penjualan.invoice');
     Route::get('/laporan', [App\Http\Controllers\LaporanController::class, 'index'])->name('laporan');
-
+    Route::get('/jadwal', [App\Http\Controllers\JadwalController::class, 'index'])->name('jadwal');
+    
     // Route Resource (Otomatis membuat rute CRUD untuk lahan)
     Route::resource('lahan', LahanController::class);
 
@@ -124,14 +146,25 @@ Route::middleware('auth')->group(function () {
     // UI Routes (Petani & Umum)
     // ----------------------------------------
     Route::get('/riwayat-batch', function () { return view('riwayat-batch'); });
-    Route::get('/profil', function () { return view('profil'); });
 
     // ----------------------------------------
     // Distributor Routes
     // ----------------------------------------
     Route::get('/distributor/dashboard', function () { 
-        return view('distributor.dashboard'); 
-    });
+        // Ambil semua data lahan beserta info petaninya
+        $lahans = \App\Models\Lahan::with('petani')->get();
+        return view('distributor.dashboard', compact('lahans')); 
+    })->name('distributor.dashboard');
+
+    // Rute Baru: Pembelian Panen
+    Route::get('/distributor/pembelian', function () { 
+        return view('distributor.pembelian'); 
+    })->name('distributor.pembelian');
+
+    // Rute Baru: Daftar Mitra Petani
+    Route::get('/distributor/mitra', function () { 
+        return view('distributor.mitra'); 
+    })->name('distributor.mitra');
 
     // ----------------------------------------
     // Admin Routes

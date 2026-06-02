@@ -69,21 +69,21 @@
                 <i class="ph ph-plant text-[20px]"></i>
                 <span class="text-[15px]">Data Lahan</span>
             </a>
+            
+            {{-- LINK PENANAMAN (Ikon sudah dipastikan muncul) --}}
             <a href="{{ route('penanaman') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
-                <i class="ph ph-sprout text-[20px]"></i>
+                <i class="ph ph-potted-plant text-[20px]"></i>
                 <span class="text-[15px]">Penanaman</span>
             </a>
+
             <a href="{{ route('irigasi') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-drop text-[20px]"></i>
                 <span class="text-[15px]">Pengairan & Irigasi</span>
             </a>
-            
-            {{-- Link Pemupukan --}}
             <a href="{{ route('pemupukan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-flask text-[20px]"></i>
                 <span class="text-[15px]">Pemupukan</span>
             </a>
-            
             <a href="{{ route('hama') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-bug text-[20px]"></i>
                 <span class="text-[15px]">Pengendalian Hama</span>
@@ -100,8 +100,6 @@
                 <i class="ph ph-money text-[20px]"></i>
                 <span class="text-[15px]">Penjualan</span>
             </a>
-            
-            {{-- Link Laporan --}}
             <a href="{{ route('laporan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-chart-bar text-[20px]"></i>
                 <span class="text-[15px]">Laporan</span>
@@ -109,31 +107,39 @@
 
             <div class="h-px bg-white/10 my-2 mx-3"></div>
 
-            <a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+<a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-bell-ringing text-[20px]"></i>
-                <span class="text-[16px] flex-1">Notifikasi</span>
-                @if(isset($jumlahNotif) && $jumlahNotif > 0)
-                    <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $jumlahNotif }}</span>
+                <span class="text-[15px] flex-1">Notifikasi</span>
+                
+                {{-- Hitung langsung dari Model agar selalu muncul --}}
+                @php
+                    $notifCount = \App\Models\BatchTanam::countNotifikasiPanen();
+                @endphp
+                
+                @if($notifCount > 0)
+                    <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $notifCount }}</span>
                 @endif
             </a>
 
-            {{-- Link Pengaturan --}}
             <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-gear text-[20px]"></i>
                 <span class="text-[16px]">Pengaturan</span>
             </a>
         </nav>
-        {{-- PROFIL SIDEBAR BAWAH --}}
+
+{{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
-            <div class="flex items-center gap-3">
+            
+            {{-- Bagian ini dibungkus tag <a> agar bisa diklik menuju profil --}}
+            <a href="{{ route('profil') }}" class="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition">
                 <div class="w-9 h-9 rounded-full bg-white text-primary-dark flex items-center justify-center font-semibold text-[14px]">
-                    {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                    {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 2)) : 'FA' }}
                 </div>
                 <div class="flex flex-col">
-                    <span class="text-[12px] font-semibold text-white leading-tight truncate max-w-[100px]">{{ Auth::user()->name }}</span>
-                    <span class="text-[11px] text-white/60 capitalize">{{ Auth::user()->role }}</span>
+                    <span class="text-[12px] font-semibold text-white leading-tight truncate max-w-[100px]">{{ Auth::check() ? Auth::user()->name : 'Fajri' }}</span>
+                    <span class="text-[11px] text-white/60 capitalize">{{ Auth::check() ? Auth::user()->role : 'Petani' }}</span>
                 </div>
-            </div>
+            </a>
             
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
@@ -156,32 +162,31 @@
             </div>
 
             <div class="flex items-center gap-5">
-    <button class="text-gray-400 hover:text-primary-dark transition"><i class="ph ph-magnifying-glass text-[24px]"></i></button>
+                <button class="text-gray-400 hover:text-primary-dark transition"><i class="ph ph-magnifying-glass text-[24px]"></i></button>
     
-        {{-- UBAH BUTTON MENJADI A HREF DI SINI --}}
-        <a href="{{ route('notifikasi') }}" class="text-gray-400 hover:text-primary-dark transition relative cursor-pointer">
-            <i class="ph ph-bell text-[24px]"></i>
-            
-            {{-- Titik merah hanya muncul jika ada notifikasi --}}
-                @if(\App\Models\BatchTanam::countNotifikasiPanen() > 0)
-                    <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-                        {{ \App\Models\BatchTanam::countNotifikasiPanen() }}
-                    </span>
-                @endif
-            </a>
+                <a href="{{ route('notifikasi') }}" class="text-gray-400 hover:text-primary-dark transition relative cursor-pointer">
+                    <i class="ph ph-bell text-[24px]"></i>
+                    @php $notifCount = \App\Models\BatchTanam::countNotifikasiPanen(); @endphp
+                    @if($notifCount > 0)
+                        <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm absolute -top-1 -right-2">
+                            {{ $notifCount }}
+                        </span>
+                    @endif
+                </a>
                 
-                <button class="flex items-center gap-2 hover:opacity-80 transition">
-                    <div class="w-8 h-8 rounded-full bg-primary-dark text-white flex items-center justify-center font-semibold text-[12px]">
-                        {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                {{-- PROFIL KANAN ATAS (SUDAH JADI LINK MURNI) --}}
+                <a href="{{ route('profil') }}" class="flex items-center gap-2 hover:opacity-80 transition cursor-pointer">
+                    <div class="w-8 h-8 rounded-full bg-primary-dark text-white flex items-center justify-center font-semibold text-[12px] shadow-sm">
+                        {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 2)) : 'FA' }}
                     </div>
                     <i class="ph ph-caret-down text-[12px] text-gray-400"></i>
-                </button>
+                </a>
             </div>
         </header>
 
         <main class="flex-1 overflow-y-auto p-8 space-y-6">
             
-            {{-- HEADER HALAMAN & SAPAAN (Tombol shortcut sudah dihapus) --}}
+            {{-- HEADER HALAMAN & SAPAAN --}}
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-[32px] font-semibold text-primary-dark leading-tight">
@@ -208,23 +213,21 @@
                     <div><p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Batch Aktif</p><h3 class="text-[20px] font-bold text-gray-900">{{ $totalBatch ?? 0 }} Batch</h3></div>
                 </div>
                 {{-- CARD 3: EST. PANEN --}}
-            <div class="bg-white rounded-[16px] p-5 shadow-sm border border-gray-100 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-green-50 text-green-500 flex items-center justify-center text-[28px] shrink-0">
-                    <i class="ph ph-calendar-check"></i>
+                <div class="bg-white rounded-[16px] p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-green-50 text-green-500 flex items-center justify-center text-[28px] shrink-0">
+                        <i class="ph ph-calendar-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Est. Panen</p>
+                        @if($totalBatch == 0)
+                            <h3 class="text-[22px] font-bold text-gray-900">-</h3>
+                        @elseif($estimasiPanen == 0)
+                            <h3 class="text-[20px] font-bold text-red-500">Hari Ini!</h3>
+                        @else
+                            <h3 class="text-[22px] font-bold text-gray-900">{{ $estimasiPanen }} Hari Lagi</h3>
+                        @endif
+                    </div>
                 </div>
-                <div>
-                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Est. Panen</p>
-                    
-                    {{-- Logika UI agar tidak bingung kalau 0 --}}
-                    @if($totalBatch == 0)
-                        <h3 class="text-[22px] font-bold text-gray-900">-</h3>
-                    @elseif($estimasiPanen == 0)
-                        <h3 class="text-[20px] font-bold text-red-500">Hari Ini!</h3>
-                    @else
-                        <h3 class="text-[22px] font-bold text-gray-900">{{ $estimasiPanen }} Hari Lagi</h3>
-                    @endif
-                </div>
-            </div>
                 <div class="bg-white p-5 rounded-[16px] shadow-card border border-gray-100 flex items-center gap-4">
                     <div class="w-12 h-12 rounded-[12px] bg-emerald-50 text-emerald-600 flex items-center justify-center text-[24px]"><i class="ph ph-currency-circle-dollar"></i></div>
                     <div><p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Pendapatan</p><h3 class="text-[20px] font-bold text-gray-900">Rp {{ $pendapatan ?? '0' }}</h3></div>
@@ -318,9 +321,10 @@
                         </div>
                     </div>
                     
-                    <button class="w-full mt-4 py-2.5 text-[13px] font-semibold text-primary-dark bg-primary-light rounded-[8px] hover:bg-green-100 transition">
+                    {{-- DIUBAH MENJADI LINK --}}
+                    <a href="{{ route('jadwal') }}" class="block text-center w-full mt-4 py-2.5 text-[13px] font-semibold text-primary-dark bg-primary-light rounded-[8px] hover:bg-green-100 transition">
                         Lihat Semua Jadwal
-                    </button>
+                    </a>
                 </div>
 
             </div>
@@ -331,9 +335,9 @@
                     <h3 class="text-[18px] font-semibold text-gray-900 flex items-center gap-2">
                         <i class="ph ph-stack text-blue-500"></i> Batch Tanaman Aktif
                     </h3>
-            <a href="{{ route('penanaman') }}" class="px-4 py-2 bg-primary-dark text-white text-[13px] font-semibold rounded-[8px] flex items-center gap-2 hover:bg-opacity-90 transition">
-                    <i class="ph ph-plus-circle text-lg"></i> Tambah Batch
-                </a>
+                    <a href="{{ route('penanaman') }}" class="px-4 py-2 bg-primary-dark text-white text-[13px] font-semibold rounded-[8px] flex items-center gap-2 hover:bg-opacity-90 transition">
+                        <i class="ph ph-plus-circle text-lg"></i> Tambah Batch
+                    </a>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -349,23 +353,19 @@
                             </tr>
                         </thead>
                         <tbody class="text-[13px] font-medium text-gray-700 divide-y divide-gray-50">
-                            @forelse($batchesAktif as $batch)
+                            @forelse($batchesAktif ?? [] as $batch)
                                 @php
                                     // LOGIKA PERHITUNGAN PROGRESS BAR
                                     $tglTanam = \Carbon\Carbon::parse($batch->tanggal_tanam)->startOfDay();
-                                    $durasiStandar = $batch->durasi_standar_hari ?: 1; // Cegah bagi nol
+                                    $durasiStandar = $batch->durasi_standar_hari ?: 1; 
                                     $tglPanen = $tglTanam->copy()->addDays($durasiStandar);
                                     
-                                    // Hitung hari yang sudah berlalu
                                     $hariBerjalan = $tglTanam->diffInDays(\Carbon\Carbon::now()->startOfDay(), false);
-                                    
-                                    // Hitung persentase (minimal 0, maksimal 100)
                                     $persen = max(0, min(100, round(($hariBerjalan / $durasiStandar) * 100)));
                                     
-                                    // Tentukan warna progress bar berdasarkan persentase
-                                    $barColor = 'bg-primary-mid'; // Hijau normal
-                                    if ($persen < 30) $barColor = 'bg-blue-400'; // Biru untuk fase awal
-                                    if ($persen > 90) $barColor = 'bg-amber-500'; // Kuning untuk siap panen
+                                    $barColor = 'bg-primary-mid'; 
+                                    if ($persen < 30) $barColor = 'bg-blue-400'; 
+                                    if ($persen > 90) $barColor = 'bg-amber-500'; 
                                 @endphp
                                 <tr class="hover:bg-gray-50 transition">
                                     <td class="px-6 py-4 font-semibold text-gray-900">{{ $batch->komoditas }} — {{ $tglTanam->translatedFormat('M Y') }}</td>
@@ -390,7 +390,8 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-center">
-                                        <a href="#" class="text-primary-mid hover:underline font-semibold text-[13px]">Detail</a>
+                                        {{-- DIUBAH MENJADI LINK KE HALAMAN DETAIL --}}
+                                        <a href="{{ url('/penanaman/detail/' . $batch->id) }}" class="text-primary-mid hover:text-primary-dark hover:underline font-semibold text-[13px] transition">Detail</a>
                                     </td>
                                 </tr>
                             @empty
@@ -401,8 +402,10 @@
                         </tbody>
                     </table>
                 </div>
+                
+                {{-- DIUBAH MENJADI LINK KE HALAMAN PENANAMAN --}}
                 <div class="p-4 bg-gray-50 text-center border-t border-gray-100">
-                    <a href="#" class="text-[13px] font-semibold text-gray-500 hover:text-primary-dark transition">Lihat semua data batch &rsaquo;</a>
+                    <a href="{{ route('penanaman') }}" class="text-[13px] font-semibold text-gray-500 hover:text-primary-dark transition">Lihat semua data batch &rsaquo;</a>
                 </div>
             </div>
 
@@ -489,7 +492,6 @@
         function eksekusiFilterDashboard() {
             polygonLayerGroup.clearLayers();
             
-            // Mengambil value pengetikan dan mengubahnya ke lowercase agar tidak case-sensitive
             const komoditasVal = document.getElementById('dash-filter-komoditas').value.toLowerCase().trim();
             const tanahVal = document.getElementById('dash-filter-tanah').value.toLowerCase().trim();
             const luasVal = parseFloat(document.getElementById('dash-filter-luas').value) || 0;
@@ -504,13 +506,8 @@
                 const jenisTanah = item.rawData.jenis_tanah ? item.rawData.jenis_tanah.toLowerCase() : '';
                 const luasHa = parseFloat(item.rawData.luas_ha) || 0;
 
-                // 1. Validasi Komoditas (Pencarian berbasis substring teks ketikan)
                 if (komoditasVal && !namaLahan.includes(komoditasVal)) lolosSeleksi = false;
-
-                // 2. Validasi Jenis Tanah
                 if (tanahVal && !jenisTanah.includes(tanahVal)) lolosSeleksi = false;
-
-                // 3. Validasi Luas Minimal
                 if (luasHa < luasVal) lolosSeleksi = false;
 
                 if (lolosSeleksi) {
@@ -532,7 +529,6 @@
             eksekusiFilterDashboard();
         }
 
-        // Jalankan filter pertama kali agar semua lahan tampil secara default
         eksekusiFilterDashboard();
     </script>
 </body>

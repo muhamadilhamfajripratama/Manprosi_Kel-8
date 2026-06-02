@@ -3,26 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Tani - Notifikasi Panen</title>
+    <title>Kalender Jadwal Tani</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    {{-- Library FullCalendar --}}
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    
     <script>
         tailwind.config = {
-            theme: {
-                extend: { fontFamily: { sans: ['Montserrat', 'sans-serif'] }, colors: { primary: { dark: '#004F3B', mid: '#43B75D' }, cream: '#EEEEEE' } }
-            }
+            theme: { extend: { fontFamily: { sans: ['Montserrat', 'sans-serif'] }, colors: { primary: { dark: '#004F3B', mid: '#43B75D', light: '#E8F5E9' }, cream: '#EEEEEE' } } }
         }
     </script>
     <style>
-        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
-        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        /* Penyesuaian font kalender agar seragam dengan aplikasi */
+        .fc { font-family: 'Montserrat', sans-serif; }
+        .fc-toolbar-title { font-weight: 700 !important; color: #004F3B !important; }
+        .fc-button-primary { background-color: #004F3B !important; border-color: #004F3B !important; text-transform: capitalize !important;}
+        .fc-button-primary:hover { background-color: #43B75D !important; border-color: #43B75D !important; }
+        .fc-event { cursor: pointer; border: none !important; padding: 2px 4px; border-radius: 4px; font-size: 11px; font-weight: 600;}
     </style>
 </head>
 <body class="bg-cream font-sans text-gray-700 h-screen flex overflow-hidden">
 
-    {{-- SIDEBAR NAVBAR UNIVERSAL --}}
+    {{-- SIDEBAR NAVBAR --}}
     <aside class="w-[260px] bg-primary-dark flex flex-col shrink-0 text-white shadow-xl z-20">
         
         <div class="h-[80px] flex items-center px-6 border-b border-white/10 shrink-0">
@@ -32,44 +38,71 @@
             <h1 class="text-[20px] leading-[28px] font-semibold tracking-wide">Sistem Tani</h1>
         </div>
 
-        <nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
+<nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
+            
+            {{-- Dashboard --}}
             <a href="/" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('/') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-house text-[20px]"></i><span class="text-[15px]">Dashboard</span>
             </a>
+
+            {{-- Peta GIS --}}
             <a href="{{ route('peta.gis') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('peta-gis*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-map-trifold text-[20px]"></i><span class="text-[15px]">Peta GIS</span>
             </a>
+            
+            {{-- Data Lahan --}}
             <a href="{{ route('lahan.index') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('lahan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-plant text-[20px]"></i><span class="text-[15px]">Data Lahan</span>
             </a>
+            
+            {{-- Penanaman --}}
             <a href="{{ route('penanaman') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('penanaman*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-potted-plant text-[20px]"></i><span class="text-[15px]">Penanaman</span>
             </a>
+
+            {{-- Kalender Jadwal --}}
             <a href="{{ route('jadwal') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('jadwal*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-calendar-blank text-[20px]"></i><span class="text-[15px]">Kalender Jadwal</span>
             </a>
+
+            {{-- Pengairan & Irigasi --}}
             <a href="{{ route('irigasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('irigasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-drop text-[20px]"></i><span class="text-[15px]">Pengairan & Irigasi</span>
             </a>
+            
+            {{-- Pemupukan --}}
             <a href="{{ route('pemupukan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('pemupukan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-flask text-[20px]"></i><span class="text-[15px]">Pemupukan</span>
             </a>
+            
+            {{-- Pengendalian Hama --}}
             <a href="{{ route('hama') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('hama*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-bug text-[20px]"></i><span class="text-[15px]">Pengendalian Hama</span>
             </a>
+            
+            {{-- Perawatan Lain --}}
             <a href="{{ route('perawatan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('perawatan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-wrench text-[20px]"></i><span class="text-[15px]">Perawatan Lain</span>
             </a>
+            
+            {{-- Hasil Panen --}}
             <a href="{{ route('panen') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('panen*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-package text-[20px]"></i><span class="text-[15px]">Hasil Panen</span>
             </a>
+            
+            {{-- Penjualan --}}
             <a href="{{ route('penjualan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('penjualan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-money text-[20px]"></i><span class="text-[15px]">Penjualan</span>
             </a>
+            
+            {{-- Laporan --}}
             <a href="{{ route('laporan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('laporan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-chart-bar text-[20px]"></i><span class="text-[15px]">Laporan</span>
             </a>
+
             <div class="h-px bg-white/10 my-2 mx-3"></div>
+
+            {{-- Notifikasi --}}
 <a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-bell-ringing text-[20px]"></i>
                 <span class="text-[15px] flex-1">Notifikasi</span>
@@ -83,13 +116,12 @@
                     <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $notifCount }}</span>
                 @endif
             </a>
+
             <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-gear text-[20px]"></i>
                 <span class="text-[16px]">Pengaturan</span>
             </a>
         </nav>
-
-        {{-- PROFIL SIDEBAR BAWAH --}}
 {{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
             
@@ -112,65 +144,63 @@
             </form>
         </div>
     </aside>
-
     {{-- MAIN CONTENT --}}
-    <main class="flex-1 flex flex-col min-w-0 bg-[#EEEEEE] overflow-y-auto p-10">
+    <main class="flex-1 overflow-y-auto p-8 space-y-6">
         
-        <div class="flex items-center justify-between mb-8">
-            <h2 class="text-[28px] font-bold text-primary-dark flex items-center gap-3">
-                <i class="ph ph-bell-ringing text-yellow-500"></i> Pemberitahuan Sistem
-            </h2>
-        </div>
-
-        <div class="max-w-4xl">
-            @forelse($notifikasi as $notif)
-                @php
-                    // 1. PEMBERSIH DESIMAL: Menghapus angka di belakang koma pada kalimat
-                    $pesanBersih = preg_replace('/(\d+)\.\d+/', '$1', $notif->pesan);
-                    
-                    // 2. ID AMAN: Mengantisipasi jika nama variabel ID batch di controllermu berbeda
-                    $idBatchAman = $notif->batch_id ?? $notif->id ?? 1;
-                @endphp
+        <div class="flex items-center justify-between mb-2">
+            <div>
+                <a href="/" class="inline-flex items-center gap-2 text-[13px] font-semibold text-gray-500 hover:text-primary-dark transition mb-2">
+                    <i class="ph ph-arrow-left text-lg"></i> Kembali ke Dashboard
+                </a>
+                <h2 class="text-[28px] font-bold text-primary-dark">Kalender Aktivitas</h2>
+            </div>
             
-                <div class="bg-white rounded-2xl p-6 shadow-sm border-l-[6px] {{ $notif->tipe == 'urgent' ? 'border-red-600' : 'border-yellow-400' }} mb-4 flex items-start gap-5 transition hover:shadow-md">
-                    
-                    <div class="w-12 h-12 shrink-0 rounded-full flex items-center justify-center {{ $notif->tipe == 'urgent' ? 'bg-red-50 text-red-600' : 'bg-yellow-50 text-yellow-600' }}">
-                        <i class="ph {{ $notif->tipe == 'urgent' ? 'ph-warning-circle' : 'ph-clock-countdown' }} text-2xl"></i>
-                    </div>
-
-                    <div class="flex-1">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                {{-- Menampilkan pesan yang sudah dibersihkan dari desimal --}}
-                                <h3 class="text-[16px] font-bold text-gray-900">{{ $pesanBersih }}</h3>
-                                <p class="text-[13px] text-gray-500 mt-1">Komoditas <span class="font-bold text-primary-dark">{{ $notif->komoditas }}</span> di <span class="font-semibold">{{ $notif->lahan }}</span>.</p>
-                            </div>
-                            <span class="text-[12px] font-bold {{ $notif->tipe == 'urgent' ? 'text-red-500 bg-red-50' : 'text-yellow-600 bg-yellow-50' }} px-3 py-1.5 rounded-md">
-                                Est. Panen: {{ $notif->tgl_panen }}
-                            </span>
-                        </div>
-                        
-                        {{-- DI SINI TOMBOLNYA SUDAH HIDUP & BISA DIKLIK --}}
-                        <div class="mt-4 pt-4 border-t border-gray-100 flex gap-3">
-                            <a href="{{ route('panen') }}" class="bg-primary-dark text-white px-4 py-2 rounded-lg text-[12px] font-bold hover:bg-opacity-90 transition">
-                                Proses Panen Sekarang
-                            </a>
-                            <a href="{{ url('/penanaman/detail/' . $idBatchAman) }}" class="bg-white border border-gray-200 text-gray-500 px-4 py-2 rounded-lg text-[12px] font-bold hover:bg-gray-50 transition block text-center">
-                                Lihat Detail Lahan
-                            </a>
-                        </div>
-                    </div>
-
-                </div>
-            @empty
-                <div class="bg-white rounded-2xl p-10 shadow-sm border border-gray-100 text-center">
-                    <i class="ph ph-check-circle text-5xl text-green-400 mb-3"></i>
-                    <h3 class="text-[18px] font-bold text-gray-900">Belum ada jadwal panen terdekat</h3>
-                    <p class="text-[13px] text-gray-500 mt-1">Tanaman di lahan Anda masih dalam masa pertumbuhan normal.</p>
-                </div>
-            @endforelse
+            {{-- Keterangan Warna --}}
+            <div class="flex gap-4 bg-white p-3 rounded-xl shadow-sm border border-gray-100 text-[11px] font-bold">
+                <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-[#43B75D]"></div>Pemupukan</div>
+                <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-[#EF4444]"></div>Hama</div>
+                <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-[#3B82F6]"></div>Irigasi</div>
+                <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-full bg-[#F59E0B]"></div>Panen</div>
+            </div>
         </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            {{-- Tempat Kalender Muncul --}}
+            <div id='calendar'></div>
+        </div>
+
     </main>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            
+            // Tangkap data yang dikirim dari controller
+            var eventsData = {!! json_encode($events) !!};
+
+var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'id', // Bahasa Indonesia
+                
+                // 👇 TAMBAHKAN KODE INI UNTUK MENGHILANGKAN JAM
+                displayEventTime: false, 
+                
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,listMonth'
+                },
+                events: eventsData, 
+                height: 650,
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.location.href = info.event.url;
+                        info.jsEvent.preventDefault();
+                    }
+                }
+            });
+            calendar.render();
+        });
+    </script>
 </body>
 </html>

@@ -26,8 +26,19 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             
-            // Redirect berdasarkan role bisa ditambahkan nanti di sini
-            return redirect()->intended('/'); 
+            // ==================================================
+            // LOGIKA PEMISAHAN ROLE (REDIRECT OTOMATIS)
+            // ==================================================
+            $userRole = Auth::user()->role;
+
+            if ($userRole === 'distributor') {
+                return redirect()->route('distributor.dashboard')->with('success', 'Selamat datang, Mitra Distributor!');
+            } elseif ($userRole === 'admin') {
+                return redirect('/admin/pengguna')->with('success', 'Selamat datang, Admin!');
+            } else {
+                // Default ke dashboard petani
+                return redirect()->route('dashboard')->with('success', 'Selamat datang kembali!');
+            }
         }
 
         return back()->withErrors([
@@ -61,7 +72,14 @@ class AuthController extends Controller
         // Langsung login setelah register berhasil
         Auth::login($user);
 
-        return redirect('/');
+        // ==================================================
+        // LOGIKA PEMISAHAN ROLE SAAT REGISTRASI BARU
+        // ==================================================
+        if ($user->role === 'distributor') {
+            return redirect()->route('distributor.dashboard')->with('success', 'Registrasi berhasil. Selamat datang, Mitra Distributor!');
+        } else {
+            return redirect()->route('dashboard')->with('success', 'Registrasi berhasil. Selamat datang di Sistem Tani!');
+        }
     }
 
     // Proses Logout

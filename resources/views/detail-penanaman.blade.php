@@ -3,32 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Tani - Peta Analisis GIS</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
-    
+    <title>Detail Batch - {{ $batch->komoditas }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Montserrat', 'sans-serif'] },
-                    colors: { primary: { dark: '#004F3B', mid: '#43B75D' } },
-                    boxShadow: { 'floating': '0 4px 20px rgba(0,0,0,0.15)' }
-                }
-            }
+            theme: { extend: { fontFamily: { sans: ['Montserrat', 'sans-serif'] }, colors: { primary: { dark: '#004F3B', mid: '#43B75D', light: '#E8F5E9' }, cream: '#EEEEEE' } } }
         }
     </script>
 </head>
-<body class="bg-gray-100 font-sans text-gray-700 h-screen flex overflow-hidden">
+<body class="bg-cream font-sans text-gray-700 h-screen flex overflow-hidden">
 
-{{-- SIDEBAR NAVBAR UNIVERSAL (Otomatis Deteksi Menu Aktif) --}}
-    <aside class="w-[260px] bg-primary-dark flex flex-col shrink-0 text-white shadow-xl z-30">
+        {{-- SIDEBAR NAVBAR --}}
+    <aside class="w-[260px] bg-primary-dark flex flex-col shrink-0 text-white shadow-xl z-20">
         
         <div class="h-[80px] flex items-center px-6 border-b border-white/10 shrink-0">
             <div class="w-8 h-8 rounded bg-primary-mid flex items-center justify-center mr-3">
@@ -122,7 +110,6 @@
             </a>
         </nav>
 
-        {{-- PROFIL SIDEBAR BAWAH --}}
 {{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
             
@@ -146,163 +133,132 @@
         </div>
     </aside>
 
-    {{-- AREA MAP FULL SCREEN --}}
-    <div class="flex-1 h-full relative z-10 bg-gray-900">
+    {{-- MAIN CONTENT --}}
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto p-10">
         
-        {{-- PETA LEAFLET --}}
-        <div id="map-gis" class="w-full h-full"></div>
-
-        {{-- FLOATING PANEL: FILTER PETA (Kiri Atas melayang) --}}
-        <div class="absolute top-6 left-6 w-[280px] bg-white rounded-[16px] shadow-floating p-5 z-[1000] border border-gray-100">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-bold text-[15px] text-gray-900">Filter Peta</h3>
-                <i class="ph ph-sliders text-gray-400 text-lg"></i>
-            </div>
-            
-            <div class="space-y-3.5">
-                {{-- Filter 1: Komoditas (Input Ketik Bebas) --}}
+        {{-- TOMBOL KEMBALI & HEADER --}}
+        <div class="mb-8">
+            <a href="{{ route('penanaman') }}" class="inline-flex items-center gap-2 text-[13px] font-semibold text-gray-500 hover:text-primary-dark transition mb-4">
+                <i class="ph ph-arrow-left text-lg"></i> Kembali ke Penanaman
+            </a>
+            <div class="flex items-center justify-between">
                 <div>
-                    <label class="block text-[11px] font-semibold text-gray-500 mb-1">Komoditas</label>
-                    <input type="text" id="filter-komoditas" onkeyup="eksekusiFilterGIS()" placeholder="Ketik (misal: Bawang)" class="w-full border border-gray-200 rounded-[8px] px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid">
+                    <h2 class="text-[28px] font-bold text-primary-dark flex items-center gap-3">
+                        Detail {{ $batch->komoditas }}
+                        <span class="text-[12px] font-bold px-3 py-1 rounded-full {{ $batch->status == 'aktif' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700' }} tracking-wide uppercase align-middle">
+                            {{ $batch->status }}
+                        </span>
+                    </h2>
+                    <p class="text-[14px] text-gray-500 mt-1">Lahan: <strong class="text-gray-700">{{ $batch->lahan->nama_lahan ?? 'Lahan Tidak Diketahui' }}</strong> | Ditanam pada: {{ \Carbon\Carbon::parse($batch->tanggal_tanam)->translatedFormat('d F Y') }}</p>
                 </div>
-                {{-- Filter 2: Jenis Tanah --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-gray-500 mb-1">Jenis Tanah</label>
-                    <input type="text" id="filter-tanah" onkeyup="eksekusiFilterGIS()" placeholder="Misal: Latosol" class="w-full border border-gray-200 rounded-[8px] px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid">
-                </div>
-                {{-- Filter 3: Luas Lahan --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-gray-500 mb-1">Luas Minimum (Ha)</label>
-                    <input type="number" id="filter-luas" onkeyup="eksekusiFilterGIS()" onchange="eksekusiFilterGIS()" placeholder="0" class="w-full border border-gray-200 rounded-[8px] px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid">
-                </div>
-                
-                <button onclick="resetFilterGIS()" class="w-full border border-gray-200 text-gray-500 font-semibold rounded-[8px] py-2 text-[12px] mt-2 hover:bg-gray-50 transition shadow-sm">
-                    Reset Filter
-                </button>
             </div>
         </div>
 
-    </div>
-
-    {{-- SCRIPT JAVASCRIPT GIS --}}
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // 1. Inisialisasi Peta & Kunci Batas Ciwidey
-        const boundsCiwidey = [
-            [-7.2000, 107.3000], 
-            [-7.0000, 107.5000]
-        ];
-        
-        const map = L.map('map-gis', {
-            maxBounds: boundsCiwidey,
-            maxBoundsViscosity: 1.0,
-            minZoom: 12,
-            zoomControl: false // Matikan tombol default agar bisa digeser ke kanan bawah
-        }).setView([-7.1044, 107.3914], 13);
-
-        // Pindahkan tombol +/- zoom ke sudut kanan bawah
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-        // 2. Gunakan Peta Satelit Esri (Agar seragam dengan Dashboard)
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '© Esri'
-        }).addTo(map);
-
-        const gisLayerGroup = L.layerGroup().addTo(map);
-        const dataLahans = @json($lahans ?? []);
-        const localGisItems = [];
-
-        if(dataLahans && dataLahans.length > 0) {
-            dataLahans.forEach(lahan => {
-                if(lahan.titik_batas) {
-                    try {
-                        let geoObj = (typeof lahan.titik_batas === 'string') ? JSON.parse(lahan.titik_batas) : lahan.titik_batas;
-                        
-                        // Menentukan warna poligon (Mengutamakan dari database, jika kosong fallback warna default)
-                        let warnaPoligon = (lahan.komoditas && lahan.komoditas.warna) ? lahan.komoditas.warna : '#43B75D'; 
-                        
-                        // Buat Layer Polygon
-                        const polyLayer = L.geoJSON(geoObj, {
-                            style: { color: warnaPoligon, fillColor: warnaPoligon, fillOpacity: 0.5, weight: 2 }
-                        });
-
-                        // Tooltip Pop-up saat di hover
-                        polyLayer.bindTooltip(`
-                            <div style="font-family: Montserrat, sans-serif; padding:2px;">
-                                <strong style="color:${warnaPoligon}; font-size:13px; display:block; border-bottom:1px solid #eee; padding-bottom:4px; margin-bottom:4px;">
-                                    ${lahan.nama_lahan}
-                                </strong>
-                                <span style="font-size:11px; color:#555;">
-                                    Komoditas: <b>${lahan.komoditas ? lahan.komoditas.nama_komoditas : '-'}</b><br>
-                                    Pemilik: <b>${lahan.petani ? lahan.petani.name : '-'}</b><br>
-                                    Luas: <b>${lahan.luas_ha} Ha</b>
-                                </span>
-                            </div>
-                        `, { sticky: true, opacity: 0.95 });
-
-                        // Efek Hover Poligon
-                        polyLayer.on('mouseover', function () { this.setStyle({ fillOpacity: 0.8, weight: 3 }); });
-                        polyLayer.on('mouseout', function () { this.setStyle({ fillOpacity: 0.5, weight: 2 }); });
-
-                        localGisItems.push({ data: lahan, layer: polyLayer });
-                    } catch(e) { console.error("Gagal mendecode poligon GIS: ", e); }
-                }
-            });
-        }
-
-        // 3. FUNGSI EKSEKUSI FILTER OTOMATIS (Tanpa tombol "Terapkan")
-        function eksekusiFilterGIS() {
-            gisLayerGroup.clearLayers();
+        {{-- WIDGET WAKTU & PERTUMBUHAN (GRID 3 KOLOM) --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="w-14 h-14 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-2xl shrink-0"><i class="ph ph-calendar-check"></i></div>
+                <div>
+                    <p class="text-[12px] font-semibold text-gray-400 uppercase">Est. Panen</p>
+                    <p class="text-[18px] font-bold text-gray-800">{{ \Carbon\Carbon::parse($batch->tanggal_tanam)->addDays($batch->durasi_standar_hari)->translatedFormat('d M Y') }}</p>
+                </div>
+            </div>
             
-            const filterKomoditas = document.getElementById('filter-komoditas').value.toLowerCase().trim();
-            const filterTanah = document.getElementById('filter-tanah').value.toLowerCase().trim();
-            const filterLuas = parseFloat(document.getElementById('filter-luas').value) || 0;
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="w-14 h-14 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-2xl shrink-0"><i class="ph ph-clock-countdown"></i></div>
+                <div>
+                    <p class="text-[12px] font-semibold text-gray-400 uppercase">Umur Saat Ini</p>
+                    @php
+                        $tglTanam = \Carbon\Carbon::parse($batch->tanggal_tanam)->startOfDay();
+                        $hariIni = \Carbon\Carbon::now()->startOfDay();
+                        $hariBerjalan = $tglTanam->diffInDays($hariIni, false);
+                        $umur = $hariBerjalan < 0 ? 0 : (int)$hariBerjalan;
+                    @endphp
+                    <p class="text-[18px] font-bold text-gray-800">{{ $umur }} <span class="text-[14px] text-gray-500 font-medium">dari {{ $batch->durasi_standar_hari }} Hari</span></p>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+                <div class="w-14 h-14 rounded-full bg-green-50 text-green-500 flex items-center justify-center text-2xl shrink-0"><i class="ph ph-plant"></i></div>
+                <div>
+                    <p class="text-[12px] font-semibold text-gray-400 uppercase">Jumlah Bibit</p>
+                    <p class="text-[18px] font-bold text-gray-800">{{ $batch->jumlah_bibit }} <span class="text-[14px] text-gray-500 font-medium">{{ $batch->satuan_bibit }}</span></p>
+                </div>
+            </div>
+        </div>
 
-            const finalBounds = new L.LatLngBounds();
-            let visibleCount = 0;
-
-            localGisItems.forEach(item => {
-                let match = true;
+        {{-- RINCIAN BIAYA & TIMELINE (GRID 2 KOLOM) --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            {{-- KOTAK KIRI: BIAYA --}}
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full">
+                <h3 class="font-bold text-[16px] text-gray-800 mb-6 border-b border-gray-100 pb-3 flex items-center gap-2"><i class="ph ph-wallet text-primary-mid text-xl"></i> Rincian Biaya Modal</h3>
                 
-                const namaLahan = item.data.nama_lahan.toLowerCase();
-                const namaKomoditas = item.data.komoditas ? item.data.komoditas.nama_komoditas.toLowerCase() : '';
-                const jenisTanah = item.data.jenis_tanah ? item.data.jenis_tanah.toLowerCase() : '';
-                const luasHa = parseFloat(item.data.luas_ha) || 0;
+                <div class="space-y-3 flex-1">
+                    
+                    {{-- 1. BIAYA PERAWATAN --}}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center"><i class="ph ph-wrench"></i></div>
+                            <span class="text-[13px] font-bold text-gray-700">Biaya Perawatan Lain</span>
+                        </div>
+                        <span class="text-[14px] font-bold text-gray-900">Rp {{ number_format($totalBiayaPerawatan ?? 0, 0, ',', '.') }}</span>
+                    </div>
+                    
+                    {{-- 2. BIAYA PUPUK --}}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><i class="ph ph-flask"></i></div>
+                            <span class="text-[13px] font-bold text-gray-700">Biaya Pemupukan</span>
+                        </div>
+                        <span class="text-[14px] font-bold text-gray-900">Rp {{ number_format($totalBiayaPupuk ?? 0, 0, ',', '.') }}</span>
+                    </div>
 
-                // Cek Pencarian Komoditas (Mencari di nama_lahan ATAU nama_komoditas database)
-                if(filterKomoditas && !(namaLahan.includes(filterKomoditas) || namaKomoditas.includes(filterKomoditas))) match = false;
+                    {{-- 3. BIAYA HAMA --}}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><i class="ph ph-bug"></i></div>
+                            <span class="text-[13px] font-bold text-gray-700">Biaya Pengendalian Hama</span>
+                        </div>
+                        <span class="text-[14px] font-bold text-gray-900">Rp {{ number_format($totalBiayaHama ?? 0, 0, ',', '.') }}</span>
+                    </div>
 
-                // Cek Jenis Tanah
-                if(filterTanah && !jenisTanah.includes(filterTanah)) match = false;
+                </div>
 
-                // Cek Luas Minimum
-                if(luasHa < filterLuas) match = false;
+                <div class="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center">
+                    <span class="text-[13px] font-bold text-gray-500">Total Keseluruhan</span>
+                    <span class="text-[20px] font-bold text-red-500">Rp {{ number_format($totalBiayaKeseluruhan ?? 0, 0, ',', '.') }}</span>
+                </div>
+            </div>
 
-                if(match) {
-                    gisLayerGroup.addLayer(item.layer);
-                    finalBounds.extend(item.layer.getBounds());
-                    visibleCount++;
-                }
-            });
-
-            // Fokus zoom peta otomatis
-            if(visibleCount > 0 && finalBounds.isValid()) {
-                map.fitBounds(finalBounds, { padding: [50, 50] });
-            }
-        }
-
-        function resetFilterGIS() {
-            document.getElementById('filter-komoditas').value = '';
-            document.getElementById('filter-tanah').value = '';
-            document.getElementById('filter-luas').value = '';
-            eksekusiFilterGIS();
+            {{-- KOTAK KANAN: TIMELINE --}}
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 h-full">
+                <h3 class="font-bold text-[16px] text-gray-800 mb-6 border-b border-gray-100 pb-3 flex items-center gap-2"><i class="ph ph-clock-counter-clockwise text-primary-mid text-xl"></i> Timeline Kegiatan Terbaru</h3>
+                
+                <div class="space-y-6 max-h-[300px] overflow-y-auto pr-2">
+                    @forelse($timeline as $item)
+                        <div class="flex gap-4 relative">
+                            @if(!$loop->last) <div class="absolute left-5 top-10 bottom-[-24px] w-0.5 bg-gray-100"></div> @endif
+                            
+                            <div class="w-10 h-10 shrink-0 rounded-full {{ $item['bg'] }} flex items-center justify-center z-10 border-4 border-white">
+                                <i class="ph {{ $item['ikon'] }} text-lg"></i>
+                            </div>
+                            <div class="pt-1.5 pb-2">
+                                <h4 class="text-[13px] font-bold text-gray-800">{{ $item['tipe'] }}</h4>
+                                <p class="text-[11px] font-semibold text-primary-mid mb-1">{{ \Carbon\Carbon::parse($item['tanggal'])->translatedFormat('d M Y') }}</p>
+                                <p class="text-[12px] text-gray-600 leading-relaxed">{{ $item['deskripsi'] }}</p>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="flex flex-col items-center justify-center py-6 text-gray-300">
+                            <i class="ph ph-file-dashed text-5xl mb-2"></i>
+                            <p class="text-[12px] text-gray-400 font-medium">Belum ada riwayat kegiatan untuk batch ini.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
             
-            // Kembalikan view peta ke default Ciwidey saat di-reset
-            map.setView([-7.1044, 107.3914], 13);
-        }
-
-        // Jalankan pas pertama kali load biar peta langsung keisi penuh
-        eksekusiFilterGIS();
-    </script>
+        </div>
+    </main>
 </body>
 </html>

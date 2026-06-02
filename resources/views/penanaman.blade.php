@@ -21,44 +21,121 @@
 </head>
 <body class="bg-cream font-sans text-gray-700 h-screen flex overflow-hidden">
 
-    {{-- SIDEBAR NAVBAR --}}
+{{-- SIDEBAR NAVBAR UNIVERSAL (Otomatis Deteksi Menu Aktif) --}}
     <aside class="w-[260px] bg-primary-dark flex flex-col shrink-0 text-white shadow-xl z-30">
+        
         <div class="h-[80px] flex items-center px-6 border-b border-white/10 shrink-0">
             <div class="w-8 h-8 rounded bg-primary-mid flex items-center justify-center mr-3">
                 <i class="ph ph-leaf text-white text-xl"></i>
             </div>
-            <h1 class="text-[20px] font-semibold tracking-wide">Sistem Tani</h1>
+            <h1 class="text-[20px] leading-[28px] font-semibold tracking-wide">Sistem Tani</h1>
         </div>
 
-        <nav class="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-1.5">
-            <a href="/" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-house text-[20px]"></i><span class="text-[15px]">Dashboard</span></a>
-            <a href="{{ route('peta.gis') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-map-trifold text-[20px]"></i><span class="text-[15px]">Peta GIS</span></a>
-            <a href="{{ route('lahan.index') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-plant text-[20px]"></i><span class="text-[15px]">Data Lahan</span></a>
+<nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
             
-            {{-- Menu Aktif --}}
-            <a href="{{ route('penanaman') }}" class="flex items-center gap-3 px-3 py-2.5 bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg transition"><i class="ph ph-sprout text-[20px]"></i><span class="text-[15px]">Penanaman</span></a>
+            {{-- Dashboard --}}
+            <a href="/" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('/') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-house text-[20px]"></i><span class="text-[15px]">Dashboard</span>
+            </a>
+
+            {{-- Peta GIS --}}
+            <a href="{{ route('peta.gis') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('peta-gis*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-map-trifold text-[20px]"></i><span class="text-[15px]">Peta GIS</span>
+            </a>
             
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-drop text-[20px]"></i><span class="text-[15px]">Pengairan & Irigasi</span></a>
-            <a href="{{ route('pemupukan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-flask text-[20px]"></i><span class="text-[15px]">Pemupukan</span></a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-bug text-[20px]"></i><span class="text-[15px]">Pengendalian Hama</span></a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-wrench text-[20px]"></i><span class="text-[15px]">Perawatan Lain</span></a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-package text-[20px]"></i><span class="text-[15px]">Hasil Panen</span></a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-money text-[20px]"></i><span class="text-[15px]">Penjualan</span></a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition"><i class="ph ph-chart-bar text-[20px]"></i><span class="text-[15px]">Laporan</span></a>
+            {{-- Data Lahan --}}
+            <a href="{{ route('lahan.index') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('lahan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-plant text-[20px]"></i><span class="text-[15px]">Data Lahan</span>
+            </a>
+            
+            {{-- Penanaman --}}
+            <a href="{{ route('penanaman') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('penanaman*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-potted-plant text-[20px]"></i><span class="text-[15px]">Penanaman</span>
+            </a>
+
+            {{-- Kalender Jadwal --}}
+            <a href="{{ route('jadwal') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('jadwal*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-calendar-blank text-[20px]"></i><span class="text-[15px]">Kalender Jadwal</span>
+            </a>
+
+            {{-- Pengairan & Irigasi --}}
+            <a href="{{ route('irigasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('irigasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-drop text-[20px]"></i><span class="text-[15px]">Pengairan & Irigasi</span>
+            </a>
+            
+            {{-- Pemupukan --}}
+            <a href="{{ route('pemupukan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('pemupukan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-flask text-[20px]"></i><span class="text-[15px]">Pemupukan</span>
+            </a>
+            
+            {{-- Pengendalian Hama --}}
+            <a href="{{ route('hama') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('hama*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-bug text-[20px]"></i><span class="text-[15px]">Pengendalian Hama</span>
+            </a>
+            
+            {{-- Perawatan Lain --}}
+            <a href="{{ route('perawatan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('perawatan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-wrench text-[20px]"></i><span class="text-[15px]">Perawatan Lain</span>
+            </a>
+            
+            {{-- Hasil Panen --}}
+            <a href="{{ route('panen') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('panen*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-package text-[20px]"></i><span class="text-[15px]">Hasil Panen</span>
+            </a>
+            
+            {{-- Penjualan --}}
+            <a href="{{ route('penjualan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('penjualan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-money text-[20px]"></i><span class="text-[15px]">Penjualan</span>
+            </a>
+            
+            {{-- Laporan --}}
+            <a href="{{ route('laporan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('laporan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-chart-bar text-[20px]"></i><span class="text-[15px]">Laporan</span>
+            </a>
+
+            <div class="h-px bg-white/10 my-2 mx-3"></div>
+
+            {{-- Notifikasi --}}
+<a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-bell-ringing text-[20px]"></i>
+                <span class="text-[15px] flex-1">Notifikasi</span>
+                
+                {{-- Hitung langsung dari Model agar selalu muncul --}}
+                @php
+                    $notifCount = \App\Models\BatchTanam::countNotifikasiPanen();
+                @endphp
+                
+                @if($notifCount > 0)
+                    <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $notifCount }}</span>
+                @endif
+            </a>
+
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+                <i class="ph ph-gear text-[20px]"></i>
+                <span class="text-[16px]">Pengaturan</span>
+            </a>
         </nav>
-        
-        <div class="p-4 border-t border-white/10 shrink-0 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-primary-mid text-white flex items-center justify-center font-semibold text-[14px]">
-                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+
+        {{-- PROFIL SIDEBAR BAWAH --}}
+{{-- PROFIL SIDEBAR BAWAH --}}
+        <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
+            
+            {{-- Bagian ini dibungkus tag <a> agar bisa diklik menuju profil --}}
+            <a href="{{ route('profil') }}" class="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition">
+                <div class="w-9 h-9 rounded-full bg-white text-primary-dark flex items-center justify-center font-semibold text-[14px]">
+                    {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 2)) : 'FA' }}
                 </div>
                 <div class="flex flex-col">
-                    <span class="text-[12px] font-semibold text-white leading-tight truncate max-w-[100px]">{{ Auth::user()->name }}</span>
-                    <span class="text-[11px] text-white/60 capitalize">{{ Auth::user()->role ?? 'Petani' }}</span>
+                    <span class="text-[12px] font-semibold text-white leading-tight truncate max-w-[100px]">{{ Auth::check() ? Auth::user()->name : 'Fajri' }}</span>
+                    <span class="text-[11px] text-white/60 capitalize">{{ Auth::check() ? Auth::user()->role : 'Petani' }}</span>
                 </div>
-            </div>
-            <form action="{{ route('logout') }}" method="POST">@csrf
-                <button type="submit"><i class="ph ph-sign-out text-white/50 hover:text-red-400 text-[20px]"></i></button>
+            </a>
+            
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" title="Keluar" class="flex items-center justify-center">
+                    <i class="ph ph-sign-out text-white/50 hover:text-red-400 transition text-[20px]"></i>
+                </button>
             </form>
         </div>
     </aside>
@@ -106,13 +183,43 @@
                     
                     {{-- Header Card --}}
                     <div>
-                        <div class="flex justify-between items-start mb-3">
+<div class="flex justify-between items-start mb-3">
                             <h3 class="text-[18px] font-bold text-gray-900 leading-tight">{{ $namaBatch }}</h3>
-                            @if($batch->status == 'aktif')
-                                <span class="bg-primary-light text-primary-dark px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">Aktif</span>
-                            @else
-                                <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">Selesai</span>
-                            @endif
+                            
+                            {{-- BUNGKUSAN BARU UNTUK BADGE & TOMBOL EDIT/DELETE --}}
+                            <div class="flex items-center gap-3">
+                                @if($batch->status == 'aktif')
+                                    <span class="bg-primary-light text-primary-dark px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">Aktif</span>
+                                @else
+                                    <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">Selesai</span>
+                                @endif
+
+                                <div class="flex gap-2 text-gray-400">
+                                    <button type="button" 
+                                        class="hover:text-blue-500 transition btn-edit-penanaman"
+                                        data-id="{{ $batch->id }}"
+                                        data-lahan="{{ $batch->lahan_id }}"
+                                        data-komoditas="{{ $batch->komoditas }}"
+                                        data-tanggal="{{ $batch->tanggal_tanam }}"
+                                        data-asal="{{ $batch->asal_bibit }}"
+                                        data-jumlah="{{ $batch->jumlah_bibit }}"
+                                        data-satuan="{{ $batch->satuan_bibit }}"
+                                        data-jarak="{{ $batch->jarak_tanam_cm }}"
+                                        data-metode="{{ $batch->metode_tanam }}"
+                                        data-durasi="{{ $batch->durasi_standar_hari }}"
+                                        data-catatan="{{ $batch->catatan }}">
+                                        <i class="ph ph-pencil-simple text-lg"></i>
+                                    </button>
+
+                                    <form action="{{ route('penanaman.destroy', $batch->id) }}" method="POST" class="inline form-delete-penanaman">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="hover:text-red-500 transition btn-hapus-penanaman">
+                                            <i class="ph ph-trash text-lg"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Badges --}}
@@ -161,12 +268,14 @@
                             </p>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3 mt-5">
-                            <button class="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl py-2.5 text-[13px] font-bold transition">
+                            <div class="grid grid-cols-2 gap-3 mt-5">
+                            {{-- Ubah jadi tag <a> agar bisa pindah halaman --}}
+                            <a href="{{ url('/penanaman/detail/' . $batch->id) }}" class="w-full flex items-center justify-center border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-xl py-2.5 text-[13px] font-bold transition">
                                 Detail
-                            </button>
+                            </a>
                             @if($batch->status == 'aktif')
-                                <button class="w-full bg-primary-dark text-white rounded-xl py-2.5 text-[13px] font-bold hover:bg-opacity-90 shadow-sm transition">
+                                {{-- Tambahkan onclick untuk memanggil modal --}}
+                                <button onclick="bukaModalKegiatan('{{ $batch->id }}', '{{ $batch->komoditas }}')" class="w-full bg-primary-dark text-white rounded-xl py-2.5 text-[13px] font-bold hover:bg-opacity-90 shadow-sm transition">
                                     Catat Kegiatan
                                 </button>
                             @else
@@ -211,7 +320,7 @@
                 <button onclick="tutupModalTanam()" class="text-white/70 hover:text-white"><i class="ph ph-x text-xl"></i></button>
             </div>
 
-            <form action="{{ route('penanaman.store') }}" method="POST" class="p-6 max-h-[85vh] overflow-y-auto">
+            <form action="{{ route('penanaman.store') }}" method="POST" id="formPenanaman" class="p-6 max-h-[85vh] overflow-y-auto">
                 @csrf
                 
                 <div class="grid grid-cols-2 gap-4 mb-4">
@@ -288,16 +397,141 @@
         </div>
     </div>
 
+    {{-- MODAL PILIH KEGIATAN (Opsi Jalan Pintas) --}}
+    <div id="modalKegiatan" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white w-full max-w-sm rounded-[20px] shadow-2xl overflow-hidden transform scale-100 p-6">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                <h3 class="font-bold text-[16px] text-gray-800 flex items-center gap-2"><i class="ph ph-squares-four text-primary-mid"></i> Catat Kegiatan</h3>
+                <button onclick="tutupModalKegiatan()" class="text-gray-400 hover:text-red-500 transition"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            
+            <p class="text-[12px] text-gray-500 mb-5">Pilih kegiatan apa yang ingin dicatat untuk batch <strong id="nama-batch-kegiatan" class="text-primary-dark"></strong> ini:</p>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <a href="{{ route('irigasi') }}" class="flex flex-col items-center justify-center p-4 rounded-xl border border-blue-100 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:shadow-sm transition">
+                    <i class="ph ph-drop text-2xl mb-1"></i>
+                    <span class="text-[11px] font-bold">Irigasi Air</span>
+                </a>
+                <a href="{{ route('pemupukan') }}" class="flex flex-col items-center justify-center p-4 rounded-xl border border-green-100 bg-green-50 text-green-600 hover:bg-green-100 hover:shadow-sm transition">
+                    <i class="ph ph-flask text-2xl mb-1"></i>
+                    <span class="text-[11px] font-bold">Pemupukan</span>
+                </a>
+                <a href="{{ route('hama') }}" class="flex flex-col items-center justify-center p-4 rounded-xl border border-red-100 bg-red-50 text-red-500 hover:bg-red-100 hover:shadow-sm transition">
+                    <i class="ph ph-bug text-2xl mb-1"></i>
+                    <span class="text-[11px] font-bold">Cek Hama</span>
+                </a>
+                <a href="{{ route('perawatan') }}" class="flex flex-col items-center justify-center p-4 rounded-xl border border-amber-100 bg-amber-50 text-amber-600 hover:bg-amber-100 hover:shadow-sm transition">
+                    <i class="ph ph-wrench text-2xl mb-1"></i>
+                    <span class="text-[11px] font-bold">Perawatan</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        const modalTanam = document.getElementById('modalTanam');
+        // ==========================================
+        // LOGIKA MODAL CATAT KEGIATAN (JALAN PINTAS)
+        // ==========================================
+        const modalKegiatan = document.getElementById('modalKegiatan');
+        
+        function bukaModalKegiatan(idBatch, namaKomoditas) {
+            // Ubah teks judul agar interaktif sesuai batch yang diklik
+            document.getElementById('nama-batch-kegiatan').innerText = namaKomoditas;
+            modalKegiatan.classList.remove('hidden');
+            modalKegiatan.classList.add('flex');
+        }
+
+        function tutupModalKegiatan() {
+            modalKegiatan.classList.add('hidden');
+            modalKegiatan.classList.remove('flex');
+        }
+
+        // ==========================================
+        // LOGIKA MODAL TAMBAH & EDIT PENANAMAN
+        // ==========================================
+        function dapatkanModalPenanaman() {
+            return document.getElementById('modalTanam') || document.querySelector('[id*="modal"]');
+        }
+
         function bukaModalTanam() {
-            modalTanam.classList.remove('hidden');
-            modalTanam.classList.add('flex');
+            const modal = dapatkanModalPenanaman();
+            if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
         }
+
         function tutupModalTanam() {
-            modalTanam.classList.add('hidden');
-            modalTanam.classList.remove('flex');
+            const modal = dapatkanModalPenanaman();
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+            
+            const form = document.getElementById('formPenanaman');
+            if (form) {
+                form.action = "{{ route('penanaman.store') }}";
+                form.reset();
+                const methodInput = document.getElementById('method-put-penanaman');
+                if (methodInput) methodInput.remove();
+            }
         }
+
+        // LOGIKA EDIT: Tangkap data kartu ke dalam modal
+        document.querySelectorAll('.btn-edit-penanaman').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                bukaModalTanam();
+                
+                const id = this.dataset.id;
+                const form = document.getElementById('formPenanaman');
+                
+                if (form) {
+                    form.action = `/penanaman/${id}`;
+                    let methodInput = document.getElementById('method-put-penanaman');
+                    if(!methodInput) {
+                        form.insertAdjacentHTML('beforeend', '<input type="hidden" name="_method" value="PUT" id="method-put-penanaman">');
+                    }
+                }
+
+                // Masukkan nilai ke form
+                if(document.querySelector('[name="lahan_id"]'))            document.querySelector('[name="lahan_id"]').value = this.dataset.lahan;
+                if(document.querySelector('[name="komoditas"]'))           document.querySelector('[name="komoditas"]').value = this.dataset.komoditas;
+                if(document.querySelector('[name="tanggal_tanam"]'))       document.querySelector('[name="tanggal_tanam"]').value = this.dataset.tanggal;
+                if(document.querySelector('[name="asal_bibit"]'))          document.querySelector('[name="asal_bibit"]').value = this.dataset.asal;
+                if(document.querySelector('[name="jumlah_bibit"]'))        document.querySelector('[name="jumlah_bibit"]').value = this.dataset.jumlah;
+                if(document.querySelector('[name="satuan_bibit"]'))        document.querySelector('[name="satuan_bibit"]').value = this.dataset.satuan;
+                if(document.querySelector('[name="jarak_tanam_cm"]'))      document.querySelector('[name="jarak_tanam_cm"]').value = this.dataset.jarak;
+                if(document.querySelector('[name="metode_tanam"]'))        document.querySelector('[name="metode_tanam"]').value = this.dataset.metode;
+                if(document.querySelector('[name="durasi_standar_hari"]')) document.querySelector('[name="durasi_standar_hari"]').value = this.dataset.durasi;
+                if(document.querySelector('[name="catatan"]'))             document.querySelector('[name="catatan"]').value = this.dataset.catatan;
+            });
+        });
+
+        // LOGIKA DELETE
+        document.querySelectorAll('.btn-hapus-penanaman').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const form = this.closest('.form-delete-penanaman');
+                Swal.fire({
+                    title: 'Hapus Batch Tanam?',
+                    text: "Data akan dihapus permanen! Pastikan tidak ada data terkait.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#9CA3AF',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed && form) form.submit();
+                });
+            });
+        });
+
+        // ALERT NOTIFIKASI
+        document.addEventListener("DOMContentLoaded", function() {
+            @if(session('success'))
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: "{!! session('success') !!}", timer: 3000, showConfirmButton: false });
+            @endif
+            @if(session('error'))
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: "{!! session('error') !!}" });
+            @endif
+        });
     </script>
 </body>
 </html>
