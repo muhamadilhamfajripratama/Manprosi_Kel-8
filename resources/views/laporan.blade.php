@@ -103,7 +103,7 @@
                 @endif
             </a>
 
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+            <a href="{{ route('pengaturan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-gear text-[20px]"></i>
                 <span class="text-[16px]">Pengaturan</span>
             </a>

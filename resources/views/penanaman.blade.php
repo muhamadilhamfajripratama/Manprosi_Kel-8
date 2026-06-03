@@ -110,14 +110,13 @@
                 @endif
             </a>
 
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+            <a href="{{ route('pengaturan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-gear text-[20px]"></i>
                 <span class="text-[16px]">Pengaturan</span>
             </a>
         </nav>
 
         {{-- PROFIL SIDEBAR BAWAH --}}
-{{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
             
             {{-- Bagian ini dibungkus tag <a> agar bisa diklik menuju profil --}}
@@ -141,7 +140,7 @@
     </aside>
 
     {{-- MAIN CONTENT --}}
-    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto p-10">
+    <main class="flex-1 flex flex-col min-w-0 bg-[#EEEEEE] overflow-y-auto p-10">
         
         <div class="mb-2">
             <h2 class="text-[28px] font-bold text-primary-dark">Batch Tanam</h2>
@@ -151,7 +150,8 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div class="relative w-full md:w-80">
                 <i class="ph ph-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></i>
-                <input type="text" placeholder="Cari nama lahan..." class="w-full border border-gray-300 rounded-full pl-11 pr-4 py-2.5 text-[13px] focus:outline-none focus:border-primary-mid shadow-sm">
+                {{-- FIXED: Tambahkan ID dan fungsi onkeyup --}}
+                <input type="text" id="cariPenanaman" onkeyup="filterPenanaman()" placeholder="Cari komoditas atau nama lahan..." class="w-full border border-gray-300 rounded-full pl-11 pr-4 py-2.5 text-[13px] focus:outline-none focus:border-primary-mid shadow-sm">
             </div>
             <button onclick="bukaModalTanam()" class="bg-primary-dark text-white px-6 py-2.5 rounded-full font-semibold text-[13px] hover:bg-opacity-90 transition flex items-center gap-2 shadow-md">
                 <i class="ph ph-plus font-bold"></i> Tambah Batch
@@ -179,11 +179,13 @@
                     $namaBatch = $batch->komoditas . ' — ' . $tglTanam->translatedFormat('F Y');
                 @endphp
 
-                <div class="bg-white rounded-2xl shadow-sm border-t-[6px] {{ $batch->status == 'aktif' ? 'border-primary-dark' : 'border-primary-dark' }} p-6 flex flex-col justify-between">
+                {{-- FIXED: Tambahkan class 'batch-card' dan attribut data-search --}}
+                <div class="batch-card bg-white rounded-2xl shadow-sm border-t-[6px] {{ $batch->status == 'aktif' ? 'border-primary-dark' : 'border-gray-400' }} p-6 flex flex-col justify-between"
+                     data-search="{{ strtolower(($batch->komoditas ?? '') . ' ' . ($batch->lahan->nama_lahan ?? '')) }}">
                     
                     {{-- Header Card --}}
                     <div>
-<div class="flex justify-between items-start mb-3">
+                        <div class="flex justify-between items-start mb-3">
                             <h3 class="text-[18px] font-bold text-gray-900 leading-tight">{{ $namaBatch }}</h3>
                             
                             {{-- BUNGKUSAN BARU UNTUK BADGE & TOMBOL EDIT/DELETE --}}
@@ -431,12 +433,28 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // ==========================================
+        // FIXED: FUNGSI PENCARIAN PENANAMAN (REAL-TIME)
+        // ==========================================
+        function filterPenanaman() {
+            let input = document.getElementById('cariPenanaman').value.toLowerCase().trim();
+            let cards = document.querySelectorAll('.batch-card');
+
+            cards.forEach(card => {
+                let textData = card.getAttribute('data-search') || '';
+                if (textData.includes(input)) {
+                    card.style.display = ""; 
+                } else {
+                    card.style.display = "none"; 
+                }
+            });
+        }
+
+        // ==========================================
         // LOGIKA MODAL CATAT KEGIATAN (JALAN PINTAS)
         // ==========================================
         const modalKegiatan = document.getElementById('modalKegiatan');
         
         function bukaModalKegiatan(idBatch, namaKomoditas) {
-            // Ubah teks judul agar interaktif sesuai batch yang diklik
             document.getElementById('nama-batch-kegiatan').innerText = namaKomoditas;
             modalKegiatan.classList.remove('hidden');
             modalKegiatan.classList.add('flex');
@@ -489,7 +507,6 @@
                     }
                 }
 
-                // Masukkan nilai ke form
                 if(document.querySelector('[name="lahan_id"]'))            document.querySelector('[name="lahan_id"]').value = this.dataset.lahan;
                 if(document.querySelector('[name="komoditas"]'))           document.querySelector('[name="komoditas"]').value = this.dataset.komoditas;
                 if(document.querySelector('[name="tanggal_tanam"]'))       document.querySelector('[name="tanggal_tanam"]').value = this.dataset.tanggal;

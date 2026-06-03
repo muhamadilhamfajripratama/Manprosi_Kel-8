@@ -35,6 +35,10 @@ Route::middleware('auth')->group(function () {
     // Proses Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::get('/pengaturan', function () {
+    return view('pengaturan');
+})->name('pengaturan');
+
     // Dashboard Utama
     Route::get('/', function () { 
         // Ambil ID user yang sedang login
@@ -143,15 +147,7 @@ Route::middleware('auth')->group(function () {
         return view('peta_gis', compact('lahans'));
     })->name('peta.gis');
 
-    // ==========================================================
-    // RUTE PROFIL DINAMIS
-    // ==========================================================
     Route::get('/profil', function () {
-        // Cek jika Admin, panggil file di dalam folder admin/
-        if (auth()->check() && auth()->user()->role === 'admin') {
-            return view('admin.profil');
-        }
-        // Jika Petani/Distributor, panggil file profil biasa
         return view('profil');
     })->name('profil');
 
@@ -320,8 +316,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/pengguna', [\App\Http\Controllers\AdminController::class, 'storePengguna'])->name('admin.pengguna.store');
         Route::put('/pengguna/{id}', [\App\Http\Controllers\AdminController::class, 'updatePengguna'])->name('admin.pengguna.update');
         Route::delete('/pengguna/{id}', [\App\Http\Controllers\AdminController::class, 'destroyPengguna'])->name('admin.pengguna.destroy');
-        
-        // FIXED: URL diubah menjadi /backup saja karena sudah di dalam prefix 'admin'
-        Route::get('/backup', [\App\Http\Controllers\AdminController::class, 'backup'])->name('admin.backup'); 
+        Route::get('/admin/backup', [\App\Http\Controllers\AdminController::class, 'backup'])->name('admin.backup');
     });
 });

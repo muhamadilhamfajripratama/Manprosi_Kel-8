@@ -15,8 +15,9 @@
 </head>
 <body class="bg-cream font-sans text-gray-700 h-screen flex overflow-hidden">
 
-    {{-- SIDEBAR NAVBAR --}}
+{{-- SIDEBAR NAVBAR UNIVERSAL (Otomatis Deteksi Menu Aktif) --}}
     <aside class="w-[260px] bg-primary-dark flex flex-col shrink-0 text-white shadow-xl z-30">
+        
         <div class="h-[80px] flex items-center px-6 border-b border-white/10 shrink-0">
             <div class="w-8 h-8 rounded bg-primary-mid flex items-center justify-center mr-3">
                 <i class="ph ph-leaf text-white text-xl"></i>
@@ -24,29 +25,95 @@
             <h1 class="text-[20px] leading-[28px] font-semibold tracking-wide">Sistem Tani</h1>
         </div>
 
-        <nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
-            <a href="/" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-house text-[20px]"></i><span class="text-[15px]">Dashboard</span></a>
-            <a href="{{ route('peta.gis') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-map-trifold text-[20px]"></i><span class="text-[15px]">Peta GIS</span></a>
-            <a href="{{ route('lahan.index') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-plant text-[20px]"></i><span class="text-[15px]">Data Lahan</span></a>
-            <a href="{{ route('penanaman') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-potted-plant text-[20px]"></i><span class="text-[15px]">Penanaman</span></a>
-            <a href="{{ route('jadwal') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-calendar-blank text-[20px]"></i><span class="text-[15px]">Kalender Jadwal</span></a>
-            <a href="{{ route('irigasi') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-drop text-[20px]"></i><span class="text-[15px]">Pengairan & Irigasi</span></a>
-            <a href="{{ route('pemupukan') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-flask text-[20px]"></i><span class="text-[15px]">Pemupukan</span></a>
-            <a href="{{ route('hama') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-bug text-[20px]"></i><span class="text-[15px]">Pengendalian Hama</span></a>
-            <a href="{{ route('perawatan') }}" class="flex items-center gap-3 px-3 py-2.5 bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg transition-colors"><i class="ph ph-wrench text-[20px]"></i><span class="text-[15px]">Perawatan Lain</span></a>
-            <a href="{{ route('panen') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-package text-[20px]"></i><span class="text-[15px]">Hasil Panen</span></a>
-            <a href="{{ route('penjualan') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-money text-[20px]"></i><span class="text-[15px]">Penjualan</span></a>
-            <a href="{{ route('laporan') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-chart-bar text-[20px]"></i><span class="text-[15px]">Laporan</span></a>
-            <div class="h-px bg-white/10 my-2 mx-3"></div>
-            <a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
-                <i class="ph ph-bell-ringing text-[20px]"></i><span class="text-[15px] flex-1">Notifikasi</span>
-                @php $notifCount = \App\Models\BatchTanam::countNotifikasiPanen(); @endphp
-                @if($notifCount > 0)<span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $notifCount }}</span>@endif
+<nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
+            
+            {{-- Dashboard --}}
+            <a href="/" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('/') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-house text-[20px]"></i><span class="text-[15px]">Dashboard</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-gear text-[20px]"></i><span class="text-[16px]">Pengaturan</span></a>
+
+            {{-- Peta GIS --}}
+            <a href="{{ route('peta.gis') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('peta-gis*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-map-trifold text-[20px]"></i><span class="text-[15px]">Peta GIS</span>
+            </a>
+            
+            {{-- Data Lahan --}}
+            <a href="{{ route('lahan.index') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('lahan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-plant text-[20px]"></i><span class="text-[15px]">Data Lahan</span>
+            </a>
+            
+            {{-- Penanaman --}}
+            <a href="{{ route('penanaman') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('penanaman*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-potted-plant text-[20px]"></i><span class="text-[15px]">Penanaman</span>
+            </a>
+
+            {{-- Kalender Jadwal --}}
+            <a href="{{ route('jadwal') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('jadwal*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-calendar-blank text-[20px]"></i><span class="text-[15px]">Kalender Jadwal</span>
+            </a>
+
+            {{-- Pengairan & Irigasi --}}
+            <a href="{{ route('irigasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('irigasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-drop text-[20px]"></i><span class="text-[15px]">Pengairan & Irigasi</span>
+            </a>
+            
+            {{-- Pemupukan --}}
+            <a href="{{ route('pemupukan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('pemupukan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-flask text-[20px]"></i><span class="text-[15px]">Pemupukan</span>
+            </a>
+            
+            {{-- Pengendalian Hama --}}
+            <a href="{{ route('hama') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('hama*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-bug text-[20px]"></i><span class="text-[15px]">Pengendalian Hama</span>
+            </a>
+            
+            {{-- Perawatan Lain --}}
+            <a href="{{ route('perawatan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('perawatan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-wrench text-[20px]"></i><span class="text-[15px]">Perawatan Lain</span>
+            </a>
+            
+            {{-- Hasil Panen --}}
+            <a href="{{ route('panen') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('panen*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-package text-[20px]"></i><span class="text-[15px]">Hasil Panen</span>
+            </a>
+            
+            {{-- Penjualan --}}
+            <a href="{{ route('penjualan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('penjualan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-money text-[20px]"></i><span class="text-[15px]">Penjualan</span>
+            </a>
+            
+            {{-- Laporan --}}
+            <a href="{{ route('laporan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('laporan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-chart-bar text-[20px]"></i><span class="text-[15px]">Laporan</span>
+            </a>
+
+            <div class="h-px bg-white/10 my-2 mx-3"></div>
+
+            {{-- Notifikasi --}}
+<a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+                <i class="ph ph-bell-ringing text-[20px]"></i>
+                <span class="text-[15px] flex-1">Notifikasi</span>
+                
+                {{-- Hitung langsung dari Model agar selalu muncul --}}
+                @php
+                    $notifCount = \App\Models\BatchTanam::countNotifikasiPanen();
+                @endphp
+                
+                @if($notifCount > 0)
+                    <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $notifCount }}</span>
+                @endif
+            </a>
+
+            <a href="{{ route('pengaturan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+                <i class="ph ph-gear text-[20px]"></i>
+                <span class="text-[16px]">Pengaturan</span>
+            </a>
         </nav>
 
+        {{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
+            
+            {{-- Bagian ini dibungkus tag <a> agar bisa diklik menuju profil --}}
             <a href="{{ route('profil') }}" class="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition">
                 <div class="w-9 h-9 rounded-full bg-white text-primary-dark flex items-center justify-center font-semibold text-[14px]">
                     {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 2)) : 'FA' }}
@@ -56,9 +123,12 @@
                     <span class="text-[11px] text-white/60 capitalize">{{ Auth::check() ? Auth::user()->role : 'Petani' }}</span>
                 </div>
             </a>
+            
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" title="Keluar" class="flex items-center justify-center"><i class="ph ph-sign-out text-white/50 hover:text-red-400 transition text-[20px]"></i></button>
+                <button type="submit" title="Keluar" class="flex items-center justify-center">
+                    <i class="ph ph-sign-out text-white/50 hover:text-red-400 transition text-[20px]"></i>
+                </button>
             </form>
         </div>
     </aside>
@@ -78,19 +148,24 @@
             {{-- BAGIAN KIRI: PILIH BATCH --}}
             <div class="col-span-1 lg:col-span-4 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 class="font-bold text-[14px] text-gray-900 mb-4">Pilih Batch</h3>
+                
+                {{-- FIXED: Menambahkan fungsi onkeyup untuk memicu filter --}}
                 <div class="relative mb-5">
-                    <input type="text" placeholder="Cari Batch..." class="w-full border border-gray-200 rounded-[8px] pl-3 pr-3 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid">
+                    <input type="text" id="cariBatch" onkeyup="filterBatch()" placeholder="Cari Batch..." class="w-full border border-gray-200 rounded-[8px] pl-3 pr-8 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid">
+                    <div class="absolute right-3 top-2.5 text-gray-400">
+                        <i class="ph ph-magnifying-glass text-lg"></i>
+                    </div>
                 </div>
 
-                <div class="space-y-3">
-                    @forelse($batches as $batch)
+                <div class="space-y-3" id="daftar-batch">
+                    @forelse($batches as $index => $batch)
                         @php 
                             $biayaBatch = \App\Models\KegiatanPerawatan::where('batch_id', $batch->id)->sum('biaya'); 
                             $isActive = ($selectedBatchId == $batch->id);
                         @endphp
                         
-                        {{-- DIUBAH MENJADI LINK (A) AGAR BISA FILTER BATCH --}}
-                        <a href="{{ route('perawatan', ['batch_id' => $batch->id]) }}" class="flex items-center justify-between p-4 rounded-xl cursor-pointer transition block {{ $isActive ? 'bg-green-50 border-l-[3px] border-primary-mid shadow-sm' : 'hover:bg-gray-50 border border-transparent' }}">
+                        {{-- FIXED: Menambahkan class 'batch-item' dan atribut 'data-nama' untuk target pencarian --}}
+                        <a href="{{ route('perawatan', ['batch_id' => $batch->id]) }}" class="batch-item flex items-center justify-between p-4 rounded-xl cursor-pointer transition block {{ $isActive ? 'bg-green-50 border-l-[3px] border-primary-mid shadow-sm' : 'hover:bg-gray-50 border border-transparent' }}" data-nama="{{ strtolower(($batch->komoditas ?? '') . ' ' . ($batch->lahan->nama_lahan ?? '')) }}">
                             <div>
                                 <h4 class="font-bold text-[14px] text-gray-900">{{ $batch->komoditas }}</h4>
                                 <p class="text-[11px] text-gray-400 mt-1">{{ $batch->lahan->nama_lahan ?? 'Lahan Unknown' }}</p>
@@ -308,11 +383,27 @@
         function tutupModal() { tutupModalPerawatan(); }
 
         // ==========================================
+        // FIXED: FUNGSI PENCARIAN BATCH KIRI
+        // ==========================================
+        function filterBatch() {
+            let input = document.getElementById('cariBatch').value.toLowerCase().trim();
+            let batchItems = document.querySelectorAll('.batch-item');
+
+            batchItems.forEach(item => {
+                let textNama = item.getAttribute('data-nama') || '';
+                if (textNama.includes(input)) {
+                    item.style.display = ""; 
+                } else {
+                    item.style.display = "none"; 
+                }
+            });
+        }
+
+        // ==========================================
         // LOGIKA FILTER KATEGORI JAVASCRIPT
         // ==========================================
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                // 1. Ubah warna tombol yang aktif
                 document.querySelectorAll('.filter-btn').forEach(b => {
                     b.classList.remove('bg-primary-dark', 'text-white');
                     b.classList.add('bg-white', 'text-gray-600');
@@ -320,14 +411,12 @@
                 this.classList.remove('bg-white', 'text-gray-600');
                 this.classList.add('bg-primary-dark', 'text-white');
 
-                // 2. Filter baris tabel (TR)
                 const filterValue = this.dataset.filter;
                 let sumBiayaTerfilter = 0;
                 
                 document.querySelectorAll('.riwayat-item').forEach(item => {
                     if (filterValue === 'Semua' || item.dataset.jenis === filterValue) {
                         item.style.display = ''; 
-                        // Tambahkan biayanya ke total yang baru
                         const biayaBtn = item.querySelector('.btn-edit-perawatan');
                         if(biayaBtn) sumBiayaTerfilter += parseFloat(biayaBtn.dataset.biaya) || 0;
                     } else {
@@ -335,7 +424,6 @@
                     }
                 });
                 
-                // 3. Update nominal di bagian tfoot "Total Keseluruhan"
                 document.getElementById('total-foot').innerText = sumBiayaTerfilter.toLocaleString('id-ID');
             });
         });

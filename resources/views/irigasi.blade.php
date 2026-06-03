@@ -30,95 +30,59 @@
             <h1 class="text-[20px] leading-[28px] font-semibold tracking-wide">Sistem Tani</h1>
         </div>
 
-<nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
-            
-            {{-- Dashboard --}}
+        <nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
             <a href="/" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('/') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-house text-[20px]"></i><span class="text-[15px]">Dashboard</span>
             </a>
-
-            {{-- Peta GIS --}}
             <a href="{{ route('peta.gis') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('peta-gis*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-map-trifold text-[20px]"></i><span class="text-[15px]">Peta GIS</span>
             </a>
-            
-            {{-- Data Lahan --}}
             <a href="{{ route('lahan.index') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('lahan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-plant text-[20px]"></i><span class="text-[15px]">Data Lahan</span>
             </a>
-            
-            {{-- Penanaman --}}
             <a href="{{ route('penanaman') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('penanaman*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-potted-plant text-[20px]"></i><span class="text-[15px]">Penanaman</span>
             </a>
-
-            {{-- Kalender Jadwal --}}
             <a href="{{ route('jadwal') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('jadwal*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-calendar-blank text-[20px]"></i><span class="text-[15px]">Kalender Jadwal</span>
             </a>
-
-            {{-- Pengairan & Irigasi --}}
             <a href="{{ route('irigasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('irigasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-drop text-[20px]"></i><span class="text-[15px]">Pengairan & Irigasi</span>
             </a>
-            
-            {{-- Pemupukan --}}
             <a href="{{ route('pemupukan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('pemupukan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-flask text-[20px]"></i><span class="text-[15px]">Pemupukan</span>
             </a>
-            
-            {{-- Pengendalian Hama --}}
             <a href="{{ route('hama') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('hama*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-bug text-[20px]"></i><span class="text-[15px]">Pengendalian Hama</span>
             </a>
-            
-            {{-- Perawatan Lain --}}
             <a href="{{ route('perawatan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('perawatan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-wrench text-[20px]"></i><span class="text-[15px]">Perawatan Lain</span>
             </a>
-            
-            {{-- Hasil Panen --}}
             <a href="{{ route('panen') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('panen*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-package text-[20px]"></i><span class="text-[15px]">Hasil Panen</span>
             </a>
-            
-            {{-- Penjualan --}}
             <a href="{{ route('penjualan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('penjualan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-money text-[20px]"></i><span class="text-[15px]">Penjualan</span>
             </a>
-            
-            {{-- Laporan --}}
             <a href="{{ route('laporan') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('laporan*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-chart-bar text-[20px]"></i><span class="text-[15px]">Laporan</span>
             </a>
 
             <div class="h-px bg-white/10 my-2 mx-3"></div>
 
-            {{-- Notifikasi --}}
-<a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+            <a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-bell-ringing text-[20px]"></i>
                 <span class="text-[15px] flex-1">Notifikasi</span>
-                
-                {{-- Hitung langsung dari Model agar selalu muncul --}}
-                @php
-                    $notifCount = \App\Models\BatchTanam::countNotifikasiPanen();
-                @endphp
-                
-                @if($notifCount > 0)
-                    <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $notifCount }}</span>
-                @endif
+                @php $notifCount = \App\Models\BatchTanam::countNotifikasiPanen(); @endphp
+                @if($notifCount > 0)<span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $notifCount }}</span>@endif
             </a>
-
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
-                <i class="ph ph-gear text-[20px]"></i>
-                <span class="text-[16px]">Pengaturan</span>
+            <a href="{{ route('pengaturan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+                <i class="ph ph-gear text-[20px]"></i><span class="text-[16px]">Pengaturan</span>
             </a>
         </nav>
 
         {{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
-            
-            {{-- Bagian ini dibungkus tag <a> agar bisa diklik menuju profil --}}
             <a href="{{ route('profil') }}" class="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition">
                 <div class="w-9 h-9 rounded-full bg-white text-primary-dark flex items-center justify-center font-semibold text-[14px]">
                     {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 2)) : 'FA' }}
@@ -128,7 +92,6 @@
                     <span class="text-[11px] text-white/60 capitalize">{{ Auth::check() ? Auth::user()->role : 'Petani' }}</span>
                 </div>
             </a>
-            
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
                 <button type="submit" title="Keluar" class="flex items-center justify-center">
@@ -153,23 +116,25 @@
             {{-- BAGIAN KIRI: PILIH BATCH --}}
             <div class="col-span-1 lg:col-span-5 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 class="font-bold text-[14px] text-gray-900 mb-4">Pilih Batch Tanam</h3>
+                
+                {{-- FIXED: Menambahkan ID dan fungsi onkeyup untuk memicu filter pencarian batch --}}
                 <div class="relative mb-5">
-                    <input type="text" placeholder="Cari Batch..." class="w-full border border-gray-200 rounded-[8px] pl-3 pr-3 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid">
+                    <input type="text" id="cariBatch" onkeyup="filterBatch()" placeholder="Cari Batch..." class="w-full border border-gray-200 rounded-[8px] pl-3 pr-8 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid">
+                    <div class="absolute right-3 top-2.5 text-gray-400">
+                        <i class="ph ph-magnifying-glass text-lg"></i>
+                    </div>
                 </div>
 
-                <div class="space-y-3">
+                <div class="space-y-3" id="daftar-batch">
                     @forelse($batches as $batch)
                         @php
-                            // Menghitung jumlah irigasi spesifik untuk batch ini secara langsung
                             $jmlIrigasiBatch = \App\Models\KegiatanIrigasi::where('batch_id', $batch->id)->count();
                             $tglTanam = \Carbon\Carbon::parse($batch->tanggal_tanam)->translatedFormat('d M');
-                            
-                            // Cek apakah batch ini sedang diklik (aktif)
                             $isActive = ($selectedBatchId == $batch->id);
                         @endphp
                         
-                        {{-- MENGUBAH DIV MENJADI TAG LINK (A) AGAR BISA DIKLIK --}}
-                        <a href="{{ route('irigasi', ['batch_id' => $batch->id]) }}" class="flex items-center justify-between p-4 rounded-xl cursor-pointer transition block {{ $isActive ? 'bg-green-50 border-l-4 border-primary-mid shadow-sm' : 'hover:bg-gray-50 border border-gray-100' }}">
+                        {{-- FIXED: Menambahkan class 'batch-item' dan atribut 'data-nama' untuk target javascript pencarian --}}
+                        <a href="{{ route('irigasi', ['batch_id' => $batch->id]) }}" class="batch-item flex items-center justify-between p-4 rounded-xl cursor-pointer transition block {{ $isActive ? 'bg-green-50 border-l-4 border-primary-mid shadow-sm' : 'hover:bg-gray-50 border border-gray-100' }}" data-nama="{{ strtolower(($batch->komoditas ?? '') . ' ' . ($batch->lahan->nama_lahan ?? '')) }}">
                             <div>
                                 <h4 class="font-bold text-[14px] text-gray-900">{{ $batch->komoditas }}</h4>
                                 <p class="text-[11px] text-gray-500 mt-1">{{ $batch->lahan->nama_lahan ?? 'Lahan Unknown' }} - Tanam: {{ $tglTanam }}</p>
@@ -212,42 +177,37 @@
                 <div class="space-y-4">
                     @forelse($riwayats as $rw)
                         <div class="border border-gray-100 rounded-[12px] p-5 hover:shadow-sm transition bg-white">
-                            {{-- Header Kartu (Tanggal & Aksi) --}}
                             <div class="flex justify-between items-start mb-3">
                                 <h4 class="text-[13px] font-bold text-gray-900">
                                     {{ \Carbon\Carbon::parse($rw->tanggal)->translatedFormat('l, d M Y') }}
                                 </h4>
-<div class="flex gap-2 text-gray-300">
-    {{-- Tombol Edit Menggunakan Data Attributes (Aman & Rapih) --}}
-    <button type="button" 
-        class="hover:text-blue-500 transition btn-edit-irigasi"
-        data-id="{{ $rw->id }}"
-        data-batch="{{ $rw->batch_id }}"
-        data-tanggal="{{ $rw->tanggal }}"
-        data-volume="{{ $rw->debit_liter }}"
-        data-sumber="{{ $rw->sumber_pengairan }}"
-        data-catatan="{{ $rw->catatan }}">
-        <i class="ph ph-pencil-simple text-lg"></i>
-    </button>
+                                <div class="flex gap-2 text-gray-300">
+                                    <button type="button" 
+                                        class="hover:text-blue-500 transition btn-edit-irigasi"
+                                        data-id="{{ $rw->id }}"
+                                        data-batch="{{ $rw->batch_id }}"
+                                        data-tanggal="{{ $rw->tanggal }}"
+                                        data-volume="{{ $rw->debit_liter }}"
+                                        data-sumber="{{ $rw->sumber_pengairan }}"
+                                        data-catatan="{{ $rw->catatan }}">
+                                        <i class="ph ph-pencil-simple text-lg"></i>
+                                    </button>
 
-    {{-- Tombol Delete Terproteksi --}}
-    <form action="{{ route('irigasi.destroy', $rw->id) }}" method="POST" class="inline form-delete-irigasi">
-        @csrf
-        @method('DELETE')
-        <button type="button" class="hover:text-red-500 transition btn-hapus-irigasi">
-            <i class="ph ph-trash text-lg"></i>
-        </button>
-    </form>
-</div>
+                                    <form action="{{ route('irigasi.destroy', $rw->id) }}" method="POST" class="inline form-delete-irigasi">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="hover:text-red-500 transition btn-hapus-irigasi">
+                                            <i class="ph ph-trash text-lg"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                             
-                            {{-- Body Kartu (Volume) --}}
                             <div class="flex items-center gap-2 mb-3">
                                 <i class="ph ph-drop text-blue-500 text-[22px]"></i>
                                 <span class="text-[20px] font-bold text-gray-900">{{ number_format($rw->debit_liter, 0, ',', '.') }} Liter</span>
                             </div>
                             
-                            {{-- Footer Kartu (Sumber & Catatan) --}}
                             <div class="flex flex-col gap-2">
                                 <span class="inline-block border border-gray-200 text-gray-500 text-[11px] font-semibold px-2.5 py-1 rounded w-max">
                                     {{ $rw->sumber_pengairan ?? 'Sumber Tidak Diketahui' }}
@@ -322,7 +282,7 @@
         </div>
     </div>
 
-{{-- Script Validasi & Interaksi Irigasi --}}
+    {{-- Script Validasi & Interaksi Irigasi --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function dapatkanModalIrigasi() {
@@ -350,6 +310,23 @@
             }
         }
         function tutupModal() { tutupModalIrigasi(); }
+
+        // ==========================================
+        // FIXED: FUNGSI PENCARIAN BATCH KIRI
+        // ==========================================
+        function filterBatch() {
+            let input = document.getElementById('cariBatch').value.toLowerCase().trim();
+            let batchItems = document.querySelectorAll('.batch-item');
+
+            batchItems.forEach(item => {
+                let textNama = item.getAttribute('data-nama') || '';
+                if (textNama.includes(input)) {
+                    item.style.display = ""; 
+                } else {
+                    item.style.display = "none"; 
+                }
+            });
+        }
 
         // LOGIKA EDIT: Tangkap Klik & Isi Modal
         document.querySelectorAll('.btn-edit-irigasi').forEach(button => {
@@ -399,7 +376,7 @@
             });
         });
         
-        // PERBAIKAN ALERT: Dibungkus DOMContentLoaded agar jalan sempurna saat halaman di-load
+        // ALERT LOGIC
         document.addEventListener("DOMContentLoaded", function() {
             @if(session('success'))
                 Swal.fire({ 

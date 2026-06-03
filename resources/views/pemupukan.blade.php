@@ -36,7 +36,7 @@
             <h1 class="text-[20px] leading-[28px] font-semibold tracking-wide">Sistem Tani</h1>
         </div>
 
-<nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
+        <nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
             
             {{-- Dashboard --}}
             <a href="/" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('/') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
@@ -101,11 +101,10 @@
             <div class="h-px bg-white/10 my-2 mx-3"></div>
 
             {{-- Notifikasi --}}
-<a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+            <a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-bell-ringing text-[20px]"></i>
                 <span class="text-[15px] flex-1">Notifikasi</span>
                 
-                {{-- Hitung langsung dari Model agar selalu muncul --}}
                 @php
                     $notifCount = \App\Models\BatchTanam::countNotifikasiPanen();
                 @endphp
@@ -115,7 +114,7 @@
                 @endif
             </a>
 
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+            <a href="{{ route('pengaturan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-gear text-[20px]"></i>
                 <span class="text-[16px]">Pengaturan</span>
             </a>
@@ -158,18 +157,23 @@
             {{-- BAGIAN KIRI: PILIH BATCH --}}
             <div class="col-span-1 lg:col-span-4 bg-white rounded-[16px] p-5 shadow-sm border border-gray-100">
                 <h3 class="font-bold text-[14px] text-gray-900 mb-3">Pilih Batch</h3>
-                <div class="relative mb-4">
-                    <input type="text" placeholder="Cari Batch..." class="w-full border border-gray-200 rounded-[8px] pl-3 pr-3 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid">
+                
+                {{-- FIXED: Menambahkan id, onkeyup, dan icon yang rapi --}}
+                <div class="relative mb-5">
+                    <input type="text" id="cariBatch" onkeyup="filterBatch()" placeholder="Cari Batch..." class="w-full border border-gray-200 rounded-[8px] pl-3 pr-8 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid">
+                    <div class="absolute right-3 top-2.5 text-gray-400">
+                        <i class="ph ph-magnifying-glass text-lg"></i>
+                    </div>
                 </div>
 
-                <div class="space-y-2">
+                <div class="space-y-2" id="daftar-batch">
                     @forelse($batches as $batch)
                         @php
                             $isActive = ($selectedBatchId == $batch->id);
                         @endphp
                         
-                        {{-- MENGUBAH DIV MENJADI TAG LINK (A) --}}
-                        <a href="{{ route('pemupukan', ['batch_id' => $batch->id]) }}" class="flex items-center justify-between p-3 rounded-[10px] cursor-pointer transition block {{ $isActive ? 'bg-green-50 border border-primary-mid shadow-sm' : 'hover:bg-gray-50 border border-gray-100' }}">
+                        {{-- FIXED: Menambahkan class 'batch-item' dan 'data-nama' untuk filter Javascript --}}
+                        <a href="{{ route('pemupukan', ['batch_id' => $batch->id]) }}" class="batch-item flex items-center justify-between p-3 rounded-[10px] cursor-pointer transition block {{ $isActive ? 'bg-green-50 border border-primary-mid shadow-sm' : 'hover:bg-gray-50 border border-gray-100' }}" data-nama="{{ strtolower(($batch->komoditas ?? '') . ' ' . ($batch->lahan->nama_lahan ?? '')) }}">
                             <div>
                                 <h4 class="font-bold text-[14px] text-gray-900">{{ $batch->komoditas }}</h4>
                                 <p class="text-[12px] text-gray-500 mt-0.5">
@@ -298,7 +302,6 @@
                     <select name="batch_id" required class="w-full border border-gray-200 rounded-[8px] px-3 py-2 text-sm focus:outline-none focus:border-primary-mid">
                         <option value="">-- Pilih Batch --</option>
                         @foreach($batches as $batch)
-                            {{-- Otomatis pilih batch yang sedang diklik --}}
                             <option value="{{ $batch->id }}" {{ $selectedBatchId == $batch->id ? 'selected' : '' }}>
                                 {{ $batch->nama_batch ?? $batch->komoditas }}
                             </option>
@@ -381,6 +384,23 @@
             const methodInput = document.getElementById('method-put');
             if (methodInput) methodInput.remove();
             document.getElementById('out-total').innerText = '0';
+        }
+
+        // ==========================================
+        // FIXED: FUNGSI PENCARIAN BATCH KIRI
+        // ==========================================
+        function filterBatch() {
+            let input = document.getElementById('cariBatch').value.toLowerCase().trim();
+            let batchItems = document.querySelectorAll('.batch-item');
+
+            batchItems.forEach(item => {
+                let textNama = item.getAttribute('data-nama') || '';
+                if (textNama.includes(input)) {
+                    item.style.display = ""; 
+                } else {
+                    item.style.display = "none"; 
+                }
+            });
         }
 
         // Logic Hitung Otomatis Real-time (Hanya Pupuk)

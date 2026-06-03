@@ -50,7 +50,7 @@
                 @php $notifCount = \App\Models\BatchTanam::countNotifikasiPanen(); @endphp
                 @if($notifCount > 0)<span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm">{{ $notifCount }}</span>@endif
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-gear text-[20px]"></i><span class="text-[16px]">Pengaturan</span></a>
+            <a href="{{ route('pengaturan') }}" class="flex items-center gap-3 px-3 py-2.5 hover:bg-white/5 hover:text-white rounded-lg transition-colors"><i class="ph ph-gear text-[20px]"></i><span class="text-[16px]">Pengaturan</span></a>
         </nav>
 
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
@@ -85,19 +85,24 @@
             {{-- BAGIAN KIRI: PILIH BATCH --}}
             <div class="col-span-1 lg:col-span-4 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 class="font-bold text-[14px] text-gray-900 mb-4">Pilih Batch</h3>
+                
+                {{-- FIXED: Menambahkan fungsi onkeyup untuk memicu filter dan icon yang rapi --}}
                 <div class="relative mb-5">
-                    <input type="text" placeholder="Cari Batch..." class="w-full border border-gray-200 rounded-[8px] pl-3 pr-3 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid">
+                    <input type="text" id="cariBatch" onkeyup="filterBatch()" placeholder="Cari Batch..." class="w-full border border-gray-200 rounded-[8px] pl-3 pr-8 py-2 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid">
+                    <div class="absolute right-3 top-2.5 text-gray-400">
+                        <i class="ph ph-magnifying-glass text-lg"></i>
+                    </div>
                 </div>
 
-                <div class="space-y-3">
-                    @forelse($batches as $batch)
+                <div class="space-y-3" id="daftar-batch">
+                    @forelse($batches as $index => $batch)
                         @php 
                             $jmlTindakan = \App\Models\KegiatanHama::where('batch_id', $batch->id)->count(); 
                             $isActive = ($selectedBatchId == $batch->id);
                         @endphp
                         
-                        {{-- DIV DIUBAH JADI LINK (A) --}}
-                        <a href="{{ route('hama', ['batch_id' => $batch->id]) }}" class="flex items-center justify-between p-4 rounded-xl cursor-pointer transition block {{ $isActive ? 'bg-green-50 border-l-[3px] border-primary-mid shadow-sm' : 'hover:bg-gray-50 border border-transparent' }}">
+                        {{-- FIXED: Menambahkan class 'batch-item' dan atribut 'data-nama' untuk target pencarian --}}
+                        <a href="{{ route('hama', ['batch_id' => $batch->id]) }}" class="batch-item flex items-center justify-between p-4 rounded-xl cursor-pointer transition block {{ $isActive ? 'bg-green-50 border-l-[3px] border-primary-mid shadow-sm' : 'hover:bg-gray-50 border border-transparent' }}" data-nama="{{ strtolower(($batch->komoditas ?? '') . ' ' . ($batch->lahan->nama_lahan ?? '')) }}">
                             <div>
                                 <h4 class="font-bold text-[14px] text-gray-900">{{ $batch->komoditas }}</h4>
                                 <p class="text-[11px] text-gray-400 mt-1">{{ $batch->lahan->nama_lahan ?? 'Lahan Unknown' }}</p>
@@ -136,7 +141,6 @@
                             if($rw->tingkat_keparahan == 'Berat') { $borderColor = 'border-red-500'; $dotColor = 'bg-red-500'; $textColor = 'text-red-600'; }
                         @endphp
 
-                        {{-- Tambahkan atribut data-keparahan agar bisa difilter Javascript --}}
                         <div class="riwayat-item border {{ $borderColor }} rounded-[12px] p-6 hover:shadow-sm transition bg-white relative" data-keparahan="{{ $rw->tingkat_keparahan }}">
                             
                             {{-- Header Kartu --}}
@@ -206,7 +210,6 @@
                 <button onclick="tutupModalHama()" class="text-white/70 hover:text-white"><i class="ph ph-x text-xl"></i></button>
             </div>
 
-            {{-- FIXED: Menambahkan ID "formHama" di form agar update berfungsi --}}
             <form id="formHama" action="{{ route('hama.store') }}" method="POST" class="p-6 max-h-[85vh] overflow-y-auto">
                 @csrf
                 
@@ -310,6 +313,23 @@
         }
     }
 
+    // ==========================================
+    // FIXED: FUNGSI PENCARIAN BATCH KIRI
+    // ==========================================
+    function filterBatch() {
+        let input = document.getElementById('cariBatch').value.toLowerCase().trim();
+        let batchItems = document.querySelectorAll('.batch-item');
+
+        batchItems.forEach(item => {
+            let textNama = item.getAttribute('data-nama') || '';
+            if (textNama.includes(input)) {
+                item.style.display = ""; 
+            } else {
+                item.style.display = "none"; 
+            }
+        });
+    }
+
     // Kalkulator Biaya Otomatis
     function hitungTotalHama() {
         let dosis = parseFloat(document.getElementById('inp-dosis').value) || 0;
@@ -318,12 +338,8 @@
         document.getElementById('out-total').innerText = totalBiaya.toLocaleString('id-ID');
     }
 
-    // ==========================================
-    // LOGIKA FILTER KATEGORI (BERAT, SEDANG, RINGAN)
-    // ==========================================
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            // 1. Ubah style tombol agar yg diklik menyala
             document.querySelectorAll('.filter-btn').forEach(b => {
                 b.classList.remove('bg-primary-dark', 'text-white');
                 b.classList.add('bg-white', 'text-gray-600');
@@ -331,7 +347,6 @@
             this.classList.remove('bg-white', 'text-gray-600');
             this.classList.add('bg-primary-dark', 'text-white');
 
-            // 2. Tampilkan/Sembunyikan Kartu Berdasarkan Kategori
             const filterValue = this.dataset.filter;
             document.querySelectorAll('.riwayat-item').forEach(item => {
                 if (filterValue === 'Semua' || item.dataset.keparahan === filterValue) {
@@ -343,7 +358,6 @@
         });
     });
 
-    // LOGIKA EDIT: Menangkap Klik dari Atribut Data
     document.querySelectorAll('.btn-edit-hama').forEach(button => {
         button.addEventListener('click', function() {
             bukaModalHama();
@@ -374,7 +388,6 @@
         });
     });
 
-    // LOGIKA SWEETALERT: Konfirmasi Hapus
     document.querySelectorAll('.btn-hapus-hama').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();

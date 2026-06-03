@@ -24,7 +24,7 @@
             <h1 class="text-[20px] leading-[28px] font-semibold tracking-wide">Sistem Tani</h1>
         </div>
 
-<nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
+        <nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
             
             {{-- Dashboard --}}
             <a href="/" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('/') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
@@ -89,11 +89,10 @@
             <div class="h-px bg-white/10 my-2 mx-3"></div>
 
             {{-- Notifikasi --}}
-<a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+            <a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-bell-ringing text-[20px]"></i>
                 <span class="text-[15px] flex-1">Notifikasi</span>
                 
-                {{-- Hitung langsung dari Model agar selalu muncul --}}
                 @php
                     $notifCount = \App\Models\BatchTanam::countNotifikasiPanen();
                 @endphp
@@ -103,17 +102,14 @@
                 @endif
             </a>
 
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+            <a href="{{ route('pengaturan') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-gear text-[20px]"></i>
                 <span class="text-[16px]">Pengaturan</span>
             </a>
         </nav>
 
         {{-- PROFIL SIDEBAR BAWAH --}}
-{{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
-            
-            {{-- Bagian ini dibungkus tag <a> agar bisa diklik menuju profil --}}
             <a href="{{ route('profil') }}" class="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition">
                 <div class="w-9 h-9 rounded-full bg-white text-primary-dark flex items-center justify-center font-semibold text-[14px]">
                     {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 2)) : 'FA' }}
@@ -140,10 +136,13 @@
             <h2 class="text-[28px] font-bold text-primary-dark">Hasil Panen</h2>
         </div>
 
+        {{-- FIXED: Perbaikan tata letak kolom pencarian sejajar dengan tombol tambah --}}
         <div class="flex items-center justify-between mb-6">
-            <div class="relative w-[300px]">
-                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                <input type="text" placeholder="Cari nama lahan..." class="w-full border border-gray-200 rounded-[8px] pl-10 pr-3 py-2.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary-mid shadow-sm">
+            <div class="relative w-full max-w-md">
+                <input type="text" id="cariPanen" onkeyup="filterPencarian()" placeholder="Cari komoditas atau nama lahan..." class="w-full border border-gray-300 rounded-[8px] pl-4 pr-10 py-2.5 text-[13px] focus:outline-none focus:border-primary-mid focus:ring-1 focus:ring-primary-mid bg-white shadow-sm">
+                <div class="absolute right-3 top-2.5 text-gray-400">
+                    <i class="ph ph-magnifying-glass text-lg"></i>
+                </div>
             </div>
             <button onclick="bukaModal()" class="bg-primary-dark text-white px-5 py-2.5 rounded-[8px] font-semibold text-[13px] hover:bg-opacity-90 transition flex items-center gap-2 shadow-sm">
                 <i class="ph ph-plus font-bold"></i> Catat Panen
@@ -151,14 +150,12 @@
         </div>
 
         {{-- LIST KARTU PANEN --}}
-        <div class="space-y-5">
+        <div class="space-y-5" id="riwayat-list">
             @forelse($riwayats as $rw)
                 @php
-                    // Kalkulasi stok terjual dan persentase progress bar
                     $terjual = $rw->jumlah_kg - $rw->sisa_stok;
                     $persenTerjual = $rw->jumlah_kg > 0 ? ($terjual / $rw->jumlah_kg) * 100 : 0;
                     
-                    // Styling dinamis berdasarkan Grade Kualitas
                     $borderColor = 'border-green-500';
                     $badgeBg = 'bg-green-100 text-green-700';
                     $stars = '⭐⭐⭐';
@@ -174,7 +171,9 @@
                     }
                 @endphp
 
-                <div class="bg-white border-l-[6px] {{ $borderColor }} rounded-[16px] p-6 shadow-sm flex flex-col gap-5">
+                {{-- FIXED: Menyematkan class kartu-panen dan data-search untuk pencarian multispesifik --}}
+                <div class="kartu-panen bg-white border-l-[6px] {{ $borderColor }} rounded-[16px] p-6 shadow-sm flex flex-col gap-5" 
+                     data-search="{{ strtolower(($rw->komoditas ?? '') . ' ' . ($rw->batchTanam->komoditas ?? '') . ' ' . ($rw->batchTanam->lahan->nama_lahan ?? '')) }}">
                     
                     {{-- Header Kartu --}}
                     <div class="flex justify-between items-start">
@@ -185,28 +184,26 @@
                         </div>
                         <div class="flex items-center gap-4">
                             <span class="text-[13px] text-gray-500 font-semibold">{{ \Carbon\Carbon::parse($rw->tanggal_panen)->translatedFormat('d M Y') }}</span>
-<div class="flex gap-2 text-gray-300">
-    {{-- Tombol Edit Menggunakan Atribut Sesuai Model HasilPanen --}}
-    <button type="button" 
-        class="hover:text-blue-500 transition btn-edit-panen"
-        data-id="{{ $rw->id }}"
-        data-batch="{{ $rw->batch_id }}"
-        data-tanggal="{{ $rw->tanggal_panen }}"
-        data-jumlah="{{ $rw->jumlah_kg }}" {{-- Menggunakan jumlah_kg --}}
-        data-grade="{{ $rw->kualitas }}"   {{-- Menggunakan kualitas --}}
-        data-catatan="{{ $rw->catatan }}">
-        <i class="ph ph-pencil-simple text-lg"></i>
-    </button>
+                            <div class="flex gap-2 text-gray-300">
+                                <button type="button" 
+                                    class="hover:text-blue-500 transition btn-edit-panen"
+                                    data-id="{{ $rw->id }}"
+                                    data-batch="{{ $rw->batch_id }}"
+                                    data-tanggal="{{ $rw->tanggal_panen }}"
+                                    data-jumlah="{{ $rw->jumlah_kg }}"
+                                    data-grade="{{ $rw->kualitas }}"
+                                    data-catatan="{{ $rw->catatan }}">
+                                    <i class="ph ph-pencil-simple text-lg"></i>
+                                </button>
 
-    {{-- Tombol Delete --}}
-    <form action="{{ route('panen.destroy', $rw->id) }}" method="POST" class="inline form-delete-panen">
-        @csrf
-        @method('DELETE')
-        <button type="button" class="hover:text-red-500 transition btn-hapus-panen">
-            <i class="ph ph-trash text-lg"></i>
-        </button>
-    </form>
-</div>
+                                <form action="{{ route('panen.destroy', $rw->id) }}" method="POST" class="inline form-delete-panen">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" class="hover:text-red-500 transition btn-hapus-panen">
+                                        <i class="ph ph-trash text-lg"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
 
@@ -226,7 +223,8 @@
                         </div>
                         <div>
                             <p class="text-[11px] font-semibold text-gray-400 flex items-center gap-1.5 mb-1"><i class="ph ph-list-dashes"></i> Detail Batch</p>
-                            <a href="#" class="text-[13px] font-bold text-primary-mid hover:underline">Lihat Batch &rarr;</a>
+                            {{-- FIXED: Redirect link menuju detail batch tanam menggunakan variable perulangan $rw --}}
+                            <a href="{{ url('/penanaman/detail/' . $rw->batch_id) }}" class="text-[13px] font-bold text-primary-mid hover:underline">Lihat Batch &rarr;</a>
                         </div>
                     </div>
                     
@@ -246,7 +244,6 @@
                             </div>
                         </div>
                         
-                        {{-- Logika Redirect Otomatis + Lempar ID Panen --}}
                         @if($rw->sisa_stok <= 0)
                             <button disabled class="bg-gray-200 text-gray-400 px-4 py-2.5 rounded-[8px] text-[12px] font-bold cursor-not-allowed">Input Penjualan &rarr;</button>
                         @else
@@ -277,19 +274,18 @@
                 
                 <form action="{{ route('panen.store') }}" method="POST" id="form-panen">
                     @csrf
-                <div class="mb-4">
-                    <label class="block text-[12px] font-bold text-gray-500 mb-1">Pilih Batch Aktif <span class="text-red-500">*</span></label>
-                    <select name="batch_id" id="batch-select" required class="w-full border border-gray-200 rounded-[8px] px-3 py-2 text-sm focus:outline-none focus:border-primary-mid">
-                        <option value="">-- Pilih Batch Tanam --</option>
-                        @foreach($batches as $batch)
-                            <option value="{{ $batch->id }}">
-                                {{ $batch->komoditas }} ({{ $batch->lahan->nama_lahan ?? '-' }}) 
-                                {{-- Menambahkan label penanda khusus secara otomatis jika statusnya sudah selesai panen --}}
-                                {{ $batch->status == 'selesai' ? '— [Sudah Panen]' : '' }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                    <div class="mb-4">
+                        <label class="block text-[12px] font-bold text-gray-500 mb-1">Pilih Batch Aktif <span class="text-red-500">*</span></label>
+                        <select name="batch_id" id="batch-select" required class="w-full border border-gray-200 rounded-[8px] px-3 py-2 text-sm focus:outline-none focus:border-primary-mid">
+                            <option value="">-- Pilih Batch Tanam --</option>
+                            @foreach($batches as $batch)
+                                <option value="{{ $batch->id }}">
+                                    {{ $batch->komoditas }} ({{ $batch->lahan->nama_lahan ?? '-' }}) 
+                                    {{ $batch->status == 'selesai' ? '— [Sudah Panen]' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
@@ -338,19 +334,15 @@
     </div>
     
     {{-- ALERT LOGIC & VALIDASI FRONTEND --}}
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // 1. Oper data batches dari PHP/Laravel ke JavaScript untuk hitung umur
         const daftarBatches = @json($batches);
 
-        // Fungsi fleksibel mencari modal panen kamu
         function dapatkanModalPanen() {
             return document.getElementById('modalPanen') 
                 || document.getElementById('modalFormPanen') 
                 || document.querySelector('[id*="modal"]');
         }
 
-        // Fungsi Membuka Modal
         function bukaModalPanen() {
             const modal = dapatkanModalPanen();
             if (modal) {
@@ -359,9 +351,7 @@
             }
         }
         function bukaModal() { bukaModalPanen(); }
-        function openModalPanen() { bukaModalPanen(); }
 
-        // Fungsi Menutup Modal & Reset Form
         function tutupModalPanen() {
             const modal = dapatkanModalPanen();
             if (modal) {
@@ -369,7 +359,6 @@
                 modal.classList.remove('flex');
             }
             
-            // Mengatasi bentrokan form-panen vs formPanen
             const form = document.getElementById('form-panen') || document.getElementById('formPanen');
             if (form) {
                 form.action = "{{ route('panen.store') }}";
@@ -380,12 +369,25 @@
             resetPanelUmur();
         }
         function tutupModal() { tutupModalPanen(); }
-        function closeModalPanen() { tutupModalPanen(); }
-
 
         // ==========================================
-        // FUNGSI PENGECEKAN UMUR UTAMA (REAL-TIME)
+        // FIXED: LOGIKA FILTER PENCARIAN REAL-TIME
         // ==========================================
+        function filterPencarian() {
+            let input = document.getElementById('cariPanen').value.toLowerCase().trim();
+            let kartuPanen = document.querySelectorAll('.kartu-panen');
+
+            kartuPanen.forEach(kartu => {
+                let textKombinasi = kartu.getAttribute('data-search') || '';
+                
+                if (textKombinasi.includes(input)) {
+                    kartu.style.display = ""; 
+                } else {
+                    kartu.style.display = "none"; 
+                }
+            });
+        }
+
         function hitungUmurAktual() {
             const batchId = document.getElementById('batch-select').value;
             const tglPanenVal = document.getElementById('tanggal_panen').value;
@@ -393,7 +395,6 @@
 
             if (!panelStatus) return;
 
-            // Jika belum pilih batch atau tanggal kosong, kembalikan ke tampilan awal
             if (!batchId || !tglPanenVal) {
                 resetPanelUmur();
                 return;
@@ -402,7 +403,6 @@
             const batch = daftarBatches.find(b => b.id == batchId);
             if (!batch) return;
 
-            // Perhitungan selisih hari antara Tanggal Tanam dan Tanggal Panen
             const tglTanam = new Date(batch.tanggal_tanam);
             const tglPanen = new Date(tglPanenVal);
             const diffTime = tglPanen.setHours(0,0,0,0) - tglTanam.setHours(0,0,0,0);
@@ -422,7 +422,6 @@
                 statusBadge = `<span class="px-3 py-1 bg-green-50 text-green-600 rounded-md text-[11px] font-bold uppercase border border-green-100">Layak Panen</span>`;
             }
 
-            // Ganti isi panel info-status sebelah kanan secara dinamis
             panelStatus.innerHTML = `
                 <div class="flex flex-col items-center justify-center space-y-4 w-full animate-fade-in">
                     <div class="w-14 h-14 rounded-full ${bgIcon} flex items-center justify-center text-2xl shadow-sm">
@@ -447,7 +446,6 @@
             `;
         }
 
-        // Kembalikan tampilan kanan ke default info pencarian
         function resetPanelUmur() {
             const panelStatus = document.getElementById('info-status');
             if(panelStatus) {
@@ -459,12 +457,10 @@
             }
         }
 
-        // Jalankan event listener ketika user mengganti pilihan dropdown atau tanggal
         document.getElementById('batch-select').addEventListener('change', hitungUmurAktual);
         document.getElementById('tanggal_panen').addEventListener('change', hitungUmurAktual);
 
-
-        // 3. LOGIKA EDIT: Menembakkan data rekam jejak lama ke dalam input modal
+        // LOGIKA EDIT MODAL
         document.querySelectorAll('.btn-edit-panen').forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -487,13 +483,11 @@
                 if(document.querySelector('[name="kualitas"]'))      document.querySelector('[name="kualitas"]').value = this.dataset.grade;
                 if(document.querySelector('[name="catatan"]'))       document.querySelector('[name="catatan"]').value = this.dataset.catatan;
                 
-                // Langsung picu pengecekan umur agar sisi kanan langsung terisi saat klik edit
                 hitungUmurAktual();
             });
         });
 
-
-        // 4. LOGIKA SWEETALERT: Konfirmasi Hapus Data
+        // LOGIKA DELETE
         document.querySelectorAll('.btn-hapus-panen').forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -515,25 +509,14 @@
                 })
             });
         });
-    // Tampilkan notifikasi jika sukses
-    @if(session('success'))
-        Swal.fire({ 
-            icon: 'success', 
-            title: 'Berhasil!', 
-            text: "{{ session('success') }}", 
-            timer: 3000, 
-            showConfirmButton: false 
-        });
-    @endif
 
-    // Tampilkan notifikasi jika ada error/gagal
-    @if(session('error'))
-        Swal.fire({ 
-            icon: 'error', 
-            title: 'Ditolak!', 
-            text: "{{ session('error') }}" 
-        });
-    @endif
+        @if(session('success'))
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: "{{ session('success') }}", timer: 3000, showConfirmButton: false });
+        @endif
+
+        @if(session('error'))
+            Swal.fire({ icon: 'error', title: 'Ditolak!', text: "{{ session('error') }}" });
+        @endif
     </script>
 </body>
 </html>
