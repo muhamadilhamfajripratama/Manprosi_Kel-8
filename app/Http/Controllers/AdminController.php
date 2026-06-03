@@ -87,7 +87,9 @@ public function backup()
         // 1. Coba gunakan mysqldump XAMPP (Windows)
         $xamppPath = 'c:\xampp\mysql\bin\mysqldump';
         $cmd = (file_exists($xamppPath . '.exe') ? $xamppPath : 'mysqldump') . " --user=" . env('DB_USERNAME', 'root') . " --password=" . env('DB_PASSWORD', '') . " " . $database . " > " . '"' . $filepath . '"';
-        exec($cmd);
+        if (function_exists('exec')) {
+        @exec($cmd);
+    }
 
         // 2. FALLBACK: Jika file gagal dibuat, ekspor manual menggunakan PHP
         if (!file_exists($filepath) || filesize($filepath) == 0) {
