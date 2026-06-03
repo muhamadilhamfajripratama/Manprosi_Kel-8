@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class HamaController extends Controller
 {
-public function index()
+    public function index(Request $request)
     {
         $userId = \Illuminate\Support\Facades\Auth::id();
 
@@ -19,14 +19,27 @@ public function index()
 
         $batches = \App\Models\BatchTanam::with('lahan')->whereIn('id', $validBatchIds)->where('status', 'aktif')->get(); 
         
-        $riwayats = \App\Models\KegiatanHama::whereIn('batch_id', $validBatchIds)->orderBy('tanggal', 'desc')->get();
+        // =======================================================
+        // LOGIKA FILTERING BERDASARKAN KLIK BATCH
+        // =======================================================
+        $selectedBatchId = $request->query('batch_id');
+
+        if (!$selectedBatchId && $batches->isNotEmpty()) {
+            $selectedBatchId = $batches->first()->id;
+        }
+
+        if ($selectedBatchId && $validBatchIds->contains($selectedBatchId)) {
+            $riwayats = \App\Models\KegiatanHama::where('batch_id', $selectedBatchId)->orderBy('tanggal', 'desc')->get();
+        } else {
+            $riwayats = collect();
+        }
 
         $totalTindakan = $riwayats->count();
         $totalBiaya = $riwayats->sum(function ($item) {
             return $item->total_biaya;
         });
 
-        return view('hama', compact('batches', 'riwayats', 'totalTindakan', 'totalBiaya'));
+        return view('hama', compact('batches', 'riwayats', 'totalTindakan', 'totalBiaya', 'selectedBatchId'));
     }
 
     public function store(Request $request)

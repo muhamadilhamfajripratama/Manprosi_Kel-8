@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PerawatanController extends Controller
 {
-public function index()
+    public function index(Request $request)
     {
         $userId = \Illuminate\Support\Facades\Auth::id();
 
@@ -19,12 +19,25 @@ public function index()
 
         $batches = \App\Models\BatchTanam::with('lahan')->whereIn('id', $validBatchIds)->where('status', 'aktif')->get(); 
         
-        $riwayats = \App\Models\KegiatanPerawatan::whereIn('batch_id', $validBatchIds)->orderBy('tanggal', 'desc')->get();
+        // =======================================================
+        // LOGIKA FILTERING BERDASARKAN KLIK BATCH
+        // =======================================================
+        $selectedBatchId = $request->query('batch_id');
+
+        if (!$selectedBatchId && $batches->isNotEmpty()) {
+            $selectedBatchId = $batches->first()->id;
+        }
+
+        if ($selectedBatchId && $validBatchIds->contains($selectedBatchId)) {
+            $riwayats = \App\Models\KegiatanPerawatan::where('batch_id', $selectedBatchId)->orderBy('tanggal', 'desc')->get();
+        } else {
+            $riwayats = collect();
+        }
 
         $totalJam = $riwayats->sum('jumlah_jam');
         $totalBiaya = $riwayats->sum('biaya');
 
-        return view('perawatan', compact('batches', 'riwayats', 'totalJam', 'totalBiaya'));
+        return view('perawatan', compact('batches', 'riwayats', 'totalJam', 'totalBiaya', 'selectedBatchId'));
     }
 
     public function store(Request $request)

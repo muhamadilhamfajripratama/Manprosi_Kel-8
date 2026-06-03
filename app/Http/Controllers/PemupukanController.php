@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PemupukanController extends Controller
 {
-public function index()
+    public function index(Request $request)
     {
         $userId = \Illuminate\Support\Facades\Auth::id();
 
@@ -20,14 +20,30 @@ public function index()
 
         $batches = \App\Models\BatchTanam::with('lahan')->whereIn('id', $validBatchIds)->where('status', 'aktif')->get(); 
         
-        $riwayats = \App\Models\KegiatanPemupukan::whereIn('batch_id', $validBatchIds)->orderBy('tanggal', 'desc')->get();
+        // =======================================================
+        // LOGIKA FILTERING BERDASARKAN KLIK BATCH
+        // =======================================================
+        $selectedBatchId = $request->query('batch_id');
 
+        // Jika tidak ada batch yang diklik, otomatis pilih batch pertama (jika ada)
+        if (!$selectedBatchId && $batches->isNotEmpty()) {
+            $selectedBatchId = $batches->first()->id;
+        }
+
+        // Filter riwayat hanya untuk batch yang terpilih
+        if ($selectedBatchId && $validBatchIds->contains($selectedBatchId)) {
+            $riwayats = \App\Models\KegiatanPemupukan::where('batch_id', $selectedBatchId)->orderBy('tanggal', 'desc')->get();
+        } else {
+            $riwayats = collect(); // Kosongkan jika tidak ada
+        }
+
+        // Kalkulasi total khusus untuk batch yang terpilih
         $totalBiaya = $riwayats->sum(function ($item) {
             return $item->total_biaya; 
         });
         $totalPemupukan = $riwayats->count(); 
 
-        return view('pemupukan', compact('batches', 'riwayats', 'totalBiaya', 'totalPemupukan'));
+        return view('pemupukan', compact('batches', 'riwayats', 'totalBiaya', 'totalPemupukan', 'selectedBatchId'));
     }
 
     public function store(Request $request)

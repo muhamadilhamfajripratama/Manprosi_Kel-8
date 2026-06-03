@@ -122,10 +122,8 @@
         </nav>
 
         {{-- PROFIL SIDEBAR BAWAH --}}
-{{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
             
-            {{-- Bagian ini dibungkus tag <a> agar bisa diklik menuju profil --}}
             <a href="{{ route('profil') }}" class="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition">
                 <div class="w-9 h-9 rounded-full bg-white text-primary-dark flex items-center justify-center font-semibold text-[14px]">
                     {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 2)) : 'FA' }}
@@ -166,16 +164,20 @@
 
                 <div class="space-y-2">
                     @forelse($batches as $batch)
-                        <div class="flex items-center justify-between p-3 rounded-[10px] cursor-pointer transition hover:bg-gray-50 border border-gray-100">
+                        @php
+                            $isActive = ($selectedBatchId == $batch->id);
+                        @endphp
+                        
+                        {{-- MENGUBAH DIV MENJADI TAG LINK (A) --}}
+                        <a href="{{ route('pemupukan', ['batch_id' => $batch->id]) }}" class="flex items-center justify-between p-3 rounded-[10px] cursor-pointer transition block {{ $isActive ? 'bg-green-50 border border-primary-mid shadow-sm' : 'hover:bg-gray-50 border border-gray-100' }}">
                             <div>
-                                {{-- PERBAIKAN: Menampilkan komoditas dan nama lahan dengan benar --}}
                                 <h4 class="font-bold text-[14px] text-gray-900">{{ $batch->komoditas }}</h4>
                                 <p class="text-[12px] text-gray-500 mt-0.5">
                                     <i class="ph ph-map-pin"></i> {{ $batch->lahan ? $batch->lahan->nama_lahan : 'Lahan tidak diketahui' }}
                                 </p>
                             </div>
-                            <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Aktif</span>
-                        </div>
+                            <span class="{{ $isActive ? 'bg-primary-mid text-white' : 'bg-green-100 text-green-700' }} px-2 py-1 rounded text-[10px] font-bold uppercase transition-colors">Aktif</span>
+                        </a>
                     @empty
                         <p class="text-[12px] text-gray-400 text-center py-4">Belum ada batch tanam aktif.</p>
                     @endforelse
@@ -213,37 +215,30 @@
                     <tbody class="text-[13px] text-gray-700 divide-y divide-gray-100 bg-white">
                         @forelse($riwayats as $rw)
                             <tr class="hover:bg-gray-50 transition-colors">
-                                {{-- 1. Kolom Tanggal --}}
                                 <td class="px-5 py-4 font-medium">
                                     {{ \Carbon\Carbon::parse($rw->tanggal)->translatedFormat('d M Y') }}
                                 </td>
                                 
-                                {{-- 2. Kolom Jenis Pupuk --}}
                                 <td class="px-5 py-4">
                                     <span class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-green-50 text-green-600 border border-green-100">
                                         {{ $rw->jenis_pupuk }}
                                     </span>
                                 </td>
                                 
-                                {{-- 3. Kolom Dosis --}}
                                 <td class="px-5 py-4 text-center text-gray-600 font-semibold">
                                     {{ $rw->dosis }} {{ $rw->satuan }}
                                 </td>
                                 
-                                {{-- 4. Kolom Harga Beli --}}
                                 <td class="px-5 py-4 text-gray-500">
                                     Rp {{ number_format($rw->harga_beli, 0, ',', '.') }} / {{ $rw->satuan }}
                                 </td>
                                 
-                                {{-- 5. Kolom Total Biaya --}}
                                 <td class="px-5 py-4 font-bold text-gray-900">
                                     Rp {{ number_format($rw->total_biaya, 0, ',', '.') }}
                                 </td>
                                 
-                                {{-- 6. Kolom Aksi (Tombol Edit & Delete Berada di Sini) --}}
                                 <td class="px-5 py-4 text-center">
                                     <div class="flex items-center justify-center gap-1">
-                                        {{-- Tombol Edit --}}
                                         <button type="button" 
                                             onclick="editPemupukan(
                                                 {{ $rw->id }}, 
@@ -260,7 +255,6 @@
                                             <i class="ph ph-pencil-simple text-lg"></i>
                                         </button>
 
-                                        {{-- Tombol Delete --}}
                                         <form action="{{ route('pemupukan.destroy', $rw->id) }}" method="POST" class="inline-block form-delete">
                                             @csrf
                                             @method('DELETE')
@@ -290,14 +284,12 @@
     <div id="modalCatat" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white w-full max-w-xl rounded-[20px] shadow-2xl overflow-hidden transform scale-100">
             
-            {{-- Header Modal --}}
             <div class="bg-primary-dark px-6 py-4 flex justify-between items-center text-white">
                 <h3 class="font-bold text-[16px] flex items-center gap-2"><i class="ph ph-flask"></i> Catat Pemupukan Baru</h3>
                 <button onclick="tutupModalCatat()" class="text-white/70 hover:text-white"><i class="ph ph-x text-xl"></i></button>
             </div>
 
-            {{-- Body Modal --}}
-<form action="{{ route('pemupukan.store') }}" method="POST" id="formPemupukan" class="p-6 max-h-[85vh] overflow-y-auto">
+            <form action="{{ route('pemupukan.store') }}" method="POST" id="formPemupukan" class="p-6 max-h-[85vh] overflow-y-auto">
                 @csrf
 
                 {{-- 1. Pilih Batch --}}
@@ -306,7 +298,10 @@
                     <select name="batch_id" required class="w-full border border-gray-200 rounded-[8px] px-3 py-2 text-sm focus:outline-none focus:border-primary-mid">
                         <option value="">-- Pilih Batch --</option>
                         @foreach($batches as $batch)
-                            <option value="{{ $batch->id }}">{{ $batch->nama_batch ?? $batch->komoditas }}</option>
+                            {{-- Otomatis pilih batch yang sedang diklik --}}
+                            <option value="{{ $batch->id }}" {{ $selectedBatchId == $batch->id ? 'selected' : '' }}>
+                                {{ $batch->nama_batch ?? $batch->komoditas }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -378,6 +373,14 @@
         function tutupModalCatat() {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            
+            // RESET FORM SAAT DITUTUP
+            const form = document.getElementById('formPemupukan');
+            form.action = "{{ route('pemupukan.store') }}";
+            form.reset();
+            const methodInput = document.getElementById('method-put');
+            if (methodInput) methodInput.remove();
+            document.getElementById('out-total').innerText = '0';
         }
 
         // Logic Hitung Otomatis Real-time (Hanya Pupuk)
@@ -423,7 +426,7 @@
             }
             
             // 2. Ubah rute action Form ke rute Update/Edit
-            const form = document.getElementById('formFormPemupukan') || document.getElementById('formPemupukan');
+            const form = document.getElementById('formPemupukan');
             if (form) {
                 form.action = `/pemupukan/${id}`;
                 
@@ -454,28 +457,10 @@
             if (inputNomide)  inputNomide.value = nomide;
             if (inputCatatan) inputCatatan.value = catatan;
 
-            // 5. Trik Otomatis: Hitung perkalian Dosis x Harga agar teks hijau "TOTAL BIAYA" langsung terisi otomatis
-            setTimeout(() => {
-                // Jika kamu punya fungsi hitung biaya bawaan di form, kita pancing panggil di sini
-                if (typeof hitungTotalBiaya === "function") {
-                    hitungTotalBiaya();
-                } else {
-                    // Kalkulasi manual cadangan untuk teks hijau di modal kamu
-                    let vDosis = parseFloat(dosis) || 0;
-                    let vHarga = parseFloat(harga) || 0;
-                    let totalVal = vDosis * vHarga;
-                    
-                    // Mencari elemen teks hijau tempat "TOTAL BIAYA PUPUK" berada
-                    let textTotal = document.body.innerHTML.match(/TOTAL BIAYA PUPUK/i);
-                    if(textTotal) {
-                        // Jika kamu memberikan ID/Class pada teks Rp di modal, isi valuenya di sini
-                        // Contoh fungsional jika dipasangkan selector pendukung:
-                        let displayTotal = document.getElementById('total-biaya-display') || inputHarga.closest('div').querySelector('.text-primary-mid');
-                        if(displayTotal) displayTotal.innerText = 'Rp ' + totalVal.toLocaleString('id-ID');
-                    }
-                }
-            }, 100);
+            // 5. Hitung perkalian Dosis x Harga agar teks hijau "TOTAL BIAYA" langsung terisi otomatis
+            hitungTotal();
         }
+        
         // 3. Tangkap Notifikasi
         @if(session('success'))
             Swal.fire({ icon: 'success', title: 'Berhasil!', text: "{{ session('success') }}", timer: 3000, showConfirmButton: false });

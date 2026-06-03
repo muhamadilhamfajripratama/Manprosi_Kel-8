@@ -116,7 +116,6 @@
         </nav>
 
         {{-- PROFIL SIDEBAR BAWAH --}}
-{{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
             
             {{-- Bagian ini dibungkus tag <a> agar bisa diklik menuju profil --}}
@@ -137,7 +136,7 @@
                 </button>
             </form>
         </div>
-    </aside>>
+    </aside>
 
     {{-- MAIN CONTENT --}}
     <main class="flex-1 flex flex-col min-w-0 bg-[#EEEEEE] overflow-y-auto p-10">
@@ -159,15 +158,18 @@
                 </div>
 
                 <div class="space-y-3">
-                    @forelse($batches as $index => $batch)
+                    @forelse($batches as $batch)
                         @php
                             // Menghitung jumlah irigasi spesifik untuk batch ini secara langsung
                             $jmlIrigasiBatch = \App\Models\KegiatanIrigasi::where('batch_id', $batch->id)->count();
                             $tglTanam = \Carbon\Carbon::parse($batch->tanggal_tanam)->translatedFormat('d M');
+                            
+                            // Cek apakah batch ini sedang diklik (aktif)
+                            $isActive = ($selectedBatchId == $batch->id);
                         @endphp
                         
-                        {{-- Efek aktif otomatis pada batch pertama --}}
-                        <div class="flex items-center justify-between p-4 rounded-xl cursor-pointer transition {{ $index == 0 ? 'bg-green-50 border-l-4 border-primary-mid' : 'hover:bg-gray-50 border border-gray-100' }}">
+                        {{-- MENGUBAH DIV MENJADI TAG LINK (A) AGAR BISA DIKLIK --}}
+                        <a href="{{ route('irigasi', ['batch_id' => $batch->id]) }}" class="flex items-center justify-between p-4 rounded-xl cursor-pointer transition block {{ $isActive ? 'bg-green-50 border-l-4 border-primary-mid shadow-sm' : 'hover:bg-gray-50 border border-gray-100' }}">
                             <div>
                                 <h4 class="font-bold text-[14px] text-gray-900">{{ $batch->komoditas }}</h4>
                                 <p class="text-[11px] text-gray-500 mt-1">{{ $batch->lahan->nama_lahan ?? 'Lahan Unknown' }} - Tanam: {{ $tglTanam }}</p>
@@ -175,7 +177,7 @@
                             <span class="bg-green-100 text-primary-dark px-2.5 py-1 rounded text-[11px] font-bold">
                                 {{ $jmlIrigasiBatch }}x Irigasi
                             </span>
-                        </div>
+                        </a>
                     @empty
                         <p class="text-[12px] text-gray-400 text-center py-4">Belum ada batch tanam aktif.</p>
                     @endforelse
@@ -188,7 +190,7 @@
                 {{-- Header Detail --}}
                 <div class="mb-8">
                     <h3 class="text-[20px] font-bold text-gray-900">Rekapitulasi Pengairan</h3>
-                    <p class="text-[12px] text-gray-400 mt-1">Total seluruh air yang telah disalurkan</p>
+                    <p class="text-[12px] text-gray-400 mt-1">Total seluruh air yang disalurkan pada lahan ini</p>
                     
                     <div class="flex flex-wrap gap-3 mt-4">
                         <span class="bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[13px] font-bold flex items-center gap-2 border border-blue-100">
@@ -272,7 +274,7 @@
         <div class="bg-white w-full max-w-lg rounded-[20px] shadow-2xl overflow-hidden transform scale-100">
             
             <div class="bg-primary-dark px-6 py-4 flex justify-between items-center text-white">
-                <h3 class="font-bold text-[16px] flex items-center gap-2"><i class="ph ph-drop"></i> Catat Pengairan Baru</h3>
+                <h3 class="font-bold text-[16px] flex items-center gap-2"><i class="ph ph-drop"></i> Catat Pengairan</h3>
                 <button onclick="tutupModalIrigasi()" class="text-white/70 hover:text-white"><i class="ph ph-x text-xl"></i></button>
             </div>
 
@@ -284,7 +286,9 @@
                     <select name="batch_id" required class="w-full border border-gray-200 rounded-[8px] px-3 py-2 text-sm focus:outline-none focus:border-primary-mid">
                         <option value="">-- Pilih Batch --</option>
                         @foreach($batches as $batch)
-                            <option value="{{ $batch->id }}">{{ $batch->komoditas }} ({{ $batch->lahan->nama_lahan ?? '-' }})</option>
+                            <option value="{{ $batch->id }}" {{ $selectedBatchId == $batch->id ? 'selected' : '' }}>
+                                {{ $batch->komoditas }} ({{ $batch->lahan->nama_lahan ?? '-' }})
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -364,8 +368,7 @@
                     }
                 }
 
-                // PERBAIKAN: Menyesuaikan atribut name dengan form HTML kamu
-                if(document.querySelector('[name="batch_id"]'))         document.querySelector('[name="batch_id"]').value = this.dataset.batch;
+                if(document.querySelector('[name="batch_id"]'))        document.querySelector('[name="batch_id"]').value = this.dataset.batch;
                 if(document.querySelector('[name="tanggal"]'))          document.querySelector('[name="tanggal"]').value = this.dataset.tanggal;
                 if(document.querySelector('[name="debit_liter"]'))      document.querySelector('[name="debit_liter"]').value = this.dataset.volume;
                 if(document.querySelector('[name="sumber_pengairan"]')) document.querySelector('[name="sumber_pengairan"]').value = this.dataset.sumber;
