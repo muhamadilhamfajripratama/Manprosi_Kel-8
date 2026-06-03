@@ -11,21 +11,22 @@ class PenanamanController extends Controller
 {
     public function index()
     {
-        // Ambil data batch beserta relasi lahannya
-        $batches = BatchTanam::with('lahan')->orderBy('created_at', 'desc')->get();
+        $userId = Auth::id(); // TAMBAHKAN INI AGAR TIDAK ERROR
         
-        // Ambil data lahan milik petani yang sedang login untuk pilihan di modal
-        $lahans = Lahan::where('petani_id', Auth::id())->get(); 
+        $batches = BatchTanam::with('lahan')->whereHas('lahan', function($query) use ($userId) {
+            $query->where('petani_id', $userId);
+        })->get();
+        
+        $lahans = Lahan::where('petani_id', $userId)->get(); 
 
         return view('penanaman', compact('batches', 'lahans'));
     }
 
     public function store(Request $request)
     {
-        // Simpan data batch baru sesuai skema migration
         BatchTanam::create([
             'lahan_id'            => $request->lahan_id,
-            'petani_id'           => Auth::id(), // Otomatis terisi ID petani yang login
+            'petani_id'           => Auth::id(), 
             'komoditas'           => $request->komoditas,
             'tanggal_tanam'       => $request->tanggal_tanam,
             'asal_bibit'          => $request->asal_bibit,
@@ -35,13 +36,12 @@ class PenanamanController extends Controller
             'metode_tanam'        => $request->metode_tanam,
             'durasi_standar_hari' => $request->durasi_standar_hari,
             'catatan'             => $request->catatan,
-            'status'              => 'aktif', // Status default
+            'status'              => 'aktif',
         ]);
 
         return redirect()->back()->with('success', 'Proses penanaman baru berhasil dimulai!');
     }
 
-    // FUNGSI UPDATE DATA PENANAMAN (EDIT)
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -51,7 +51,7 @@ class PenanamanController extends Controller
             'asal_bibit'          => 'nullable|string',
             'jumlah_bibit'        => 'nullable|numeric',
             'satuan_bibit'        => 'nullable|string',
-            'jarak_tanam_cm'      => 'nullable|string', // Sesuai dengan field di database
+            'jarak_tanam_cm'      => 'nullable|string',
             'metode_tanam'        => 'nullable|string',
             'durasi_standar_hari' => 'nullable|numeric',
         ]);
@@ -74,26 +74,17 @@ class PenanamanController extends Controller
         return redirect()->back()->with('success', 'Data penanaman berhasil diperbarui!');
     }
 
-    // FUNGSI TAMPILKAN DETAIL BATCH BESERTA RIWAYAT LENGKAP (FINAL FIX ACCESSOR)
     public function show($id)
     {
         $batch = \App\Models\BatchTanam::with('lahan')->findOrFail($id);
 
-        // ==========================================
-        // 1. AMBIL SEMUA DATA DARI DATABASE (Cukup 1x Panggil)
-        // ==========================================
         $dataIrigasi   = \App\Models\KegiatanIrigasi::where('batch_id', $id)->get();
         $dataPerawatan = \App\Models\KegiatanPerawatan::where('batch_id', $id)->get();
         $dataPemupukan = \App\Models\KegiatanPemupukan::where('batch_id', $id)->get();
         $dataHama      = \App\Models\KegiatanHama::where('batch_id', $id)->get();
 
-        // ==========================================
-        // 2. HITUNG BIAYA MENGGUNAKAN ACCESSOR COLLECTION
-        // ==========================================
-        // Perawatan pakai kolom 'biaya' biasa
         $totalBiayaPerawatan = $dataPerawatan->sum('biaya'); 
         
-        // Pupuk dan Hama pakai Accessor (sama seperti di controllermu)
         $totalBiayaPupuk = $dataPemupukan->sum(function ($item) {
             return $item->total_biaya; 
         });
@@ -103,10 +94,6 @@ class PenanamanController extends Controller
         });
         
         $totalBiayaKeseluruhan = $totalBiayaPerawatan + $totalBiayaPupuk + $totalBiayaHama;
-
-        // ==========================================
-        // 3. SUSUN TIMELINE KEGIATAN
-        // ==========================================
         
         $irigasi = $dataIrigasi->map(function($item) {
             return [
@@ -148,7 +135,6 @@ class PenanamanController extends Controller
             ];
         });
 
-        // Gabungkan semua & urutkan dari yang paling baru
         $timeline = collect([])
             ->concat($irigasi)
             ->concat($perawatan)
@@ -162,16 +148,13 @@ class PenanamanController extends Controller
         ));
     }
 
-    // FUNGSI HAPUS DATA PENANAMAN (DELETE)
     public function destroy($id)
     {
         try {
             $batch = BatchTanam::findOrFail($id);
             $batch->delete();
-            
             return redirect()->back()->with('success', 'Data penanaman berhasil dihapus!');
         } catch (\Exception $e) {
-            // Error ini akan muncul jika user mencoba menghapus Batch yang sudah punya data Panen, Irigasi, dll.
             return redirect()->back()->with('error', 'Gagal menghapus! Pastikan data batch ini tidak sedang digunakan di riwayat perawatan atau panen.');
         }
     }

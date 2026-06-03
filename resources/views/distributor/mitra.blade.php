@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
             theme: { extend: { fontFamily: { sans: ['Montserrat', 'sans-serif'] }, colors: { primary: { dark: '#004F3B', mid: '#43B75D' }, cream: '#EEEEEE' } } }
@@ -65,54 +66,79 @@
         </header>
 
         <div class="p-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 
-                {{-- KARTU MITRA 1 --}}
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center hover:shadow-md transition cursor-pointer">
-                    <div class="w-20 h-20 rounded-full bg-primary-mid text-white flex items-center justify-center text-2xl font-bold mb-4">FA</div>
-                    <h3 class="text-[16px] font-bold text-gray-900">Fajri</h3>
-                    <p class="text-[12px] text-gray-500 mb-4">Ciwidey, Jawa Barat</p>
-                    <div class="w-full bg-gray-50 rounded-lg p-3 text-left space-y-2">
-                        <div class="flex justify-between text-[11px]"><span class="text-gray-500">Total Lahan</span><span class="font-bold">12 Ha</span></div>
-                        <div class="flex justify-between text-[11px]"><span class="text-gray-500">Fokus Komoditas</span><span class="font-bold text-primary-dark">Bawang Putih Bonggol</span></div>
-                    </div>
-                </div>
+@forelse($mitras as $index => $mitra)
+                    @php
+                        $colors = ['bg-primary-mid', 'bg-primary-dark', 'bg-orange-400', 'bg-blue-500', 'bg-purple-500', 'bg-teal-500'];
+                        $bgColor = $colors[$index % count($colors)];
+                        $inisial = strtoupper(substr($mitra->name, 0, 2));
+                    @endphp
 
-                {{-- KARTU MITRA 2 --}}
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center hover:shadow-md transition cursor-pointer">
-                    <div class="w-20 h-20 rounded-full bg-primary-dark text-white flex items-center justify-center text-2xl font-bold mb-4">RE</div>
-                    <h3 class="text-[16px] font-bold text-gray-900">Reyhan</h3>
-                    <p class="text-[12px] text-gray-500 mb-4">Ciwidey, Jawa Barat</p>
-                    <div class="w-full bg-gray-50 rounded-lg p-3 text-left space-y-2">
-                        <div class="flex justify-between text-[11px]"><span class="text-gray-500">Total Lahan</span><span class="font-bold">8.5 Ha</span></div>
-                        <div class="flex justify-between text-[11px]"><span class="text-gray-500">Fokus Komoditas</span><span class="font-bold text-primary-dark">Bawang Putih Bonggol</span></div>
+                    {{-- KARTU MITRA DINAMIS (DITAMBAH ONCLICK) --}}
+                    <div onclick="lihatDetailPetani('{{ $mitra->name }}', '{{ $mitra->email }}', '{{ $mitra->total_lahan }}', '{{ $mitra->list_komoditas }}')" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center hover:shadow-md transition cursor-pointer hover:border-primary-mid">
+                        <div class="w-20 h-20 rounded-full {{ $bgColor }} text-white flex items-center justify-center text-2xl font-bold mb-4 shadow-sm">
+                            {{ $inisial }}
+                        </div>
+                        <h3 class="text-[16px] font-bold text-gray-900">{{ $mitra->name }}</h3>
+                        <p class="text-[12px] text-gray-400 mb-4">{{ $mitra->email }}</p>
+                        
+                        <div class="w-full bg-gray-50 rounded-lg p-3 text-left space-y-2 border border-gray-100">
+                            <div class="flex justify-between text-[11px]">
+                                <span class="text-gray-500">Total Lahan</span>
+                                <span class="font-bold">{{ $mitra->total_lahan > 0 ? $mitra->total_lahan : '0' }} Ha</span>
+                            </div>
+                            <div class="flex justify-between text-[11px]">
+                                <span class="text-gray-500">Fokus Komoditas</span>
+                                {{-- Tetap di-truncate untuk preview, tapi full text ada di popup --}}
+                                <span class="font-bold text-primary-dark truncate text-right max-w-[120px]">
+                                    {{ $mitra->list_komoditas }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                {{-- KARTU MITRA 3 --}}
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center hover:shadow-md transition cursor-pointer">
-                    <div class="w-20 h-20 rounded-full bg-orange-400 text-white flex items-center justify-center text-2xl font-bold mb-4">FZ</div>
-                    <h3 class="text-[16px] font-bold text-gray-900">Faiza</h3>
-                    <p class="text-[12px] text-gray-500 mb-4">Lembang, Jawa Barat</p>
-                    <div class="w-full bg-gray-50 rounded-lg p-3 text-left space-y-2">
-                        <div class="flex justify-between text-[11px]"><span class="text-gray-500">Total Lahan</span><span class="font-bold">10 Ha</span></div>
-                        <div class="flex justify-between text-[11px]"><span class="text-gray-500">Fokus Komoditas</span><span class="font-bold text-primary-dark">Bawang Putih Bonggol</span></div>
+                @empty
+                    <div class="col-span-1 md:col-span-2 lg:col-span-4 text-center py-12 bg-white rounded-2xl border border-gray-100">
+                        <i class="ph ph-users text-5xl text-gray-300 mb-3"></i>
+                        <h3 class="text-[16px] font-bold text-gray-900">Belum Ada Mitra</h3>
+                        <p class="text-[13px] text-gray-500 mt-1">Saat ini belum ada pengguna yang mendaftar sebagai Petani di sistem.</p>
                     </div>
-                </div>
-
-                {{-- KARTU MITRA 4 --}}
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center hover:shadow-md transition cursor-pointer">
-                    <div class="w-20 h-20 rounded-full bg-blue-500 text-white flex items-center justify-center text-2xl font-bold mb-4">AL</div>
-                    <h3 class="text-[16px] font-bold text-gray-900">Alya</h3>
-                    <p class="text-[12px] text-gray-500 mb-4">Pangalengan, Jawa Barat</p>
-                    <div class="w-full bg-gray-50 rounded-lg p-3 text-left space-y-2">
-                        <div class="flex justify-between text-[11px]"><span class="text-gray-500">Total Lahan</span><span class="font-bold">6 Ha</span></div>
-                        <div class="flex justify-between text-[11px]"><span class="text-gray-500">Fokus Komoditas</span><span class="font-bold text-primary-dark">Bawang Putih Bonggol</span></div>
-                    </div>
-                </div>
+                @endforelse
 
             </div>
         </div>
     </main>
+
+    {{-- SCRIPT UNTUK POP-UP DETAIL PETANI --}}
+    <script>
+        function lihatDetailPetani(nama, email, totalLahan, komoditas) {
+            Swal.fire({
+                title: 'Profil Mitra Petani',
+                html: `
+                    <div class="text-left space-y-3 mt-4 text-[13px] bg-gray-50 p-5 rounded-xl border border-gray-100">
+                        <div class="flex justify-between border-b border-gray-200 pb-2">
+                            <span class="text-gray-500">Nama Lengkap:</span> 
+                            <strong class="text-gray-900">${nama}</strong>
+                        </div>
+                        <div class="flex justify-between border-b border-gray-200 pb-2">
+                            <span class="text-gray-500">Kontak Email:</span> 
+                            <strong class="text-gray-900">${email}</strong>
+                        </div>
+                        <div class="flex justify-between border-b border-gray-200 pb-2">
+                            <span class="text-gray-500">Total Luas Lahan:</span> 
+                            <strong class="text-gray-900">${totalLahan > 0 ? totalLahan : '0'} Hektar</strong>
+                        </div>
+                        <div class="flex flex-col pt-1">
+                            <span class="text-gray-500 mb-1.5">Daftar Komoditas Tanam:</span> 
+                            <strong class="text-primary-dark leading-relaxed bg-green-50 p-3 rounded-lg border border-green-100">${komoditas}</strong>
+                        </div>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonColor: '#004F3B',
+                confirmButtonText: 'Tutup Detail'
+            });
+        }
+    </script>
 </body>
 </html>

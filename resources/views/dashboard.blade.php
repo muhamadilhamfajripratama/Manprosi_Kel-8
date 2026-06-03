@@ -70,7 +70,6 @@
                 <span class="text-[15px]">Data Lahan</span>
             </a>
             
-            {{-- LINK PENANAMAN (Ikon sudah dipastikan muncul) --}}
             <a href="{{ route('penanaman') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-potted-plant text-[20px]"></i>
                 <span class="text-[15px]">Penanaman</span>
@@ -107,11 +106,10 @@
 
             <div class="h-px bg-white/10 my-2 mx-3"></div>
 
-<a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+            <a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-bell-ringing text-[20px]"></i>
                 <span class="text-[15px] flex-1">Notifikasi</span>
                 
-                {{-- Hitung langsung dari Model agar selalu muncul --}}
                 @php
                     $notifCount = \App\Models\BatchTanam::countNotifikasiPanen();
                 @endphp
@@ -127,10 +125,8 @@
             </a>
         </nav>
 
-{{-- PROFIL SIDEBAR BAWAH --}}
+        {{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
-            
-            {{-- Bagian ini dibungkus tag <a> agar bisa diklik menuju profil --}}
             <a href="{{ route('profil') }}" class="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition">
                 <div class="w-9 h-9 rounded-full bg-white text-primary-dark flex items-center justify-center font-semibold text-[14px]">
                     {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 2)) : 'FA' }}
@@ -174,7 +170,6 @@
                     @endif
                 </a>
                 
-                {{-- PROFIL KANAN ATAS (SUDAH JADI LINK MURNI) --}}
                 <a href="{{ route('profil') }}" class="flex items-center gap-2 hover:opacity-80 transition cursor-pointer">
                     <div class="w-8 h-8 rounded-full bg-primary-dark text-white flex items-center justify-center font-semibold text-[12px] shadow-sm">
                         {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 2)) : 'FA' }}
@@ -187,7 +182,7 @@
         <main class="flex-1 overflow-y-auto p-8 space-y-6">
             
             {{-- HEADER HALAMAN & SAPAAN --}}
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
                 <div>
                     <h2 class="text-[32px] font-semibold text-primary-dark leading-tight">
                         Selamat pagi, {{ explode(' ', Auth::user()->name)[0] }} 👋
@@ -203,7 +198,7 @@
             </div>
 
             {{-- STATS CARDS --}}
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div class="bg-white p-5 rounded-[16px] shadow-card border border-gray-100 flex items-center gap-4">
                     <div class="w-12 h-12 rounded-[12px] bg-blue-50 text-blue-600 flex items-center justify-center text-[24px]"><i class="ph ph-map-pin"></i></div>
                     <div><p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Total Lahan</p><h3 class="text-[20px] font-bold text-gray-900">{{ $totalLahan ?? 0 }} Ha</h3></div>
@@ -212,7 +207,6 @@
                     <div class="w-12 h-12 rounded-[12px] bg-orange-50 text-orange-600 flex items-center justify-center text-[24px]"><i class="ph ph-package"></i></div>
                     <div><p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Batch Aktif</p><h3 class="text-[20px] font-bold text-gray-900">{{ $totalBatch ?? 0 }} Batch</h3></div>
                 </div>
-                {{-- CARD 3: EST. PANEN --}}
                 <div class="bg-white rounded-[16px] p-5 shadow-sm border border-gray-100 flex items-center gap-4">
                     <div class="w-12 h-12 rounded-xl bg-green-50 text-green-500 flex items-center justify-center text-[28px] shrink-0">
                         <i class="ph ph-calendar-check"></i>
@@ -234,8 +228,22 @@
                 </div>
             </div>
 
+            {{-- KARTU PREDIKSI PANEN --}}
+            <div onclick="lihatDetailPrediksi()" class="bg-gradient-to-br from-primary-dark to-primary-mid rounded-2xl p-6 text-white shadow-md flex items-center justify-between cursor-pointer hover:shadow-lg transition hover:scale-[1.02] mb-6">
+                <div>
+                    <p class="text-white/80 text-[12px] font-bold uppercase tracking-wider mb-1">Prediksi Panen (30 Hari)</p>
+                    <h3 class="text-3xl font-bold">{{ $prediksiStokTeks }}</h3>
+                    <p class="text-[11px] text-white/70 mt-2 flex items-center gap-1">
+                        <i class="ph ph-hand-tap"></i> Klik untuk rincian
+                    </p>
+                </div>
+                <div class="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <i class="ph ph-chart-line-up text-3xl text-white"></i>
+                </div>
+            </div>
+
             {{-- PETA & JADWAL GRID --}}
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 
                 {{-- MAP KONTEN UTAMA --}}
                 <div class="lg:col-span-2 bg-white rounded-[16px] shadow-card p-6 border border-gray-100 flex flex-col min-h-[450px]">
@@ -321,7 +329,6 @@
                         </div>
                     </div>
                     
-                    {{-- DIUBAH MENJADI LINK --}}
                     <a href="{{ route('jadwal') }}" class="block text-center w-full mt-4 py-2.5 text-[13px] font-semibold text-primary-dark bg-primary-light rounded-[8px] hover:bg-green-100 transition">
                         Lihat Semua Jadwal
                     </a>
@@ -390,7 +397,6 @@
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-center">
-                                        {{-- DIUBAH MENJADI LINK KE HALAMAN DETAIL --}}
                                         <a href="{{ url('/penanaman/detail/' . $batch->id) }}" class="text-primary-mid hover:text-primary-dark hover:underline font-semibold text-[13px] transition">Detail</a>
                                     </td>
                                 </tr>
@@ -403,7 +409,6 @@
                     </table>
                 </div>
                 
-                {{-- DIUBAH MENJADI LINK KE HALAMAN PENANAMAN --}}
                 <div class="p-4 bg-gray-50 text-center border-t border-gray-100">
                     <a href="{{ route('penanaman') }}" class="text-[13px] font-semibold text-gray-500 hover:text-primary-dark transition">Lihat semua data batch &rsaquo;</a>
                 </div>
@@ -530,6 +535,48 @@
         }
 
         eksekusiFilterDashboard();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function lihatDetailPrediksi() {
+            // Tarik data rincian dari Controller menggunakan JSON
+            const details = @json($detailPrediksi ?? []);
+            
+            if(details.length === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Belum Ada Prediksi',
+                    text: 'Tidak ada jadwal panen dalam 30 hari ke depan.',
+                    confirmButtonColor: '#004F3B'
+                });
+                return;
+            }
+
+            // Susun HTML untuk Pop-up
+            let htmlContent = '<div class="text-left space-y-3 mt-4 text-[13px]">';
+            details.forEach(item => {
+                htmlContent += `
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 flex justify-between items-center shadow-sm">
+                        <div>
+                            <strong class="text-gray-900 block text-[14px]">${item.komoditas}</strong>
+                            <span class="text-gray-500 text-[11px]"><i class="ph ph-map-pin mr-1"></i>${item.lahan} (${item.luas} Ha)</span>
+                        </div>
+                        <strong class="text-primary-dark text-lg">${item.estimasi}</strong>
+                    </div>
+                `;
+            });
+            htmlContent += '</div>';
+
+            // Tampilkan SweetAlert
+            Swal.fire({
+                title: 'Rincian Prediksi Panen',
+                html: htmlContent,
+                icon: 'info',
+                confirmButtonColor: '#004F3B',
+                confirmButtonText: 'Tutup'
+            });
+        }
     </script>
 </body>
 </html>

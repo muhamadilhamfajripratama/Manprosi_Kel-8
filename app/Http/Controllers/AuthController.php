@@ -31,13 +31,13 @@ class AuthController extends Controller
             // ==================================================
             $userRole = Auth::user()->role;
 
-            if ($userRole === 'distributor') {
+            if ($userRole === 'admin') {
+                return redirect()->route('admin.pengguna')->with('success', 'Selamat datang kembali, Administrator!');
+            } elseif ($userRole === 'distributor') {
                 return redirect()->route('distributor.dashboard')->with('success', 'Selamat datang, Mitra Distributor!');
-            } elseif ($userRole === 'admin') {
-                return redirect('/admin/pengguna')->with('success', 'Selamat datang, Admin!');
             } else {
                 // Default ke dashboard petani
-                return redirect()->route('dashboard')->with('success', 'Selamat datang kembali!');
+                return redirect()->route('dashboard')->with('success', 'Selamat datang kembali, Petani!');
             }
         }
 
@@ -59,7 +59,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|in:petani,distributor' // Sesuai enum di database
+            'role' => 'required|in:petani,distributor' 
         ]);
 
         $user = User::create([
@@ -69,7 +69,6 @@ class AuthController extends Controller
             'role' => $request->role,
         ]);
 
-        // Langsung login setelah register berhasil
         Auth::login($user);
 
         // ==================================================
@@ -80,6 +79,27 @@ class AuthController extends Controller
         } else {
             return redirect()->route('dashboard')->with('success', 'Registrasi berhasil. Selamat datang di Sistem Tani!');
         }
+    }
+
+    // Proses Update Profil
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'password' => 'nullable|min:6|confirmed',
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+        $user->save();
+
+        return redirect()->back()->with('success', 'Profil berhasil diperbarui!');
     }
 
     // Proses Logout

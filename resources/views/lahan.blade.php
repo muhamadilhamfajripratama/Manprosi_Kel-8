@@ -49,7 +49,7 @@
             <h1 class="text-[20px] leading-[28px] font-semibold tracking-wide">Sistem Tani</h1>
         </div>
 
-<nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
+        <nav class="flex-1 overflow-y-auto sidebar-scroll py-6 px-4 flex flex-col gap-1.5">
             
             {{-- Dashboard --}}
             <a href="/" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('/') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
@@ -114,7 +114,7 @@
             <div class="h-px bg-white/10 my-2 mx-3"></div>
 
             {{-- Notifikasi --}}
-<a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
+            <a href="{{ route('notifikasi') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->is('notifikasi*') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition-colors">
                 <i class="ph ph-bell-ringing text-[20px]"></i>
                 <span class="text-[15px] flex-1">Notifikasi</span>
                 
@@ -135,10 +135,7 @@
         </nav>
 
         {{-- PROFIL SIDEBAR BAWAH --}}
-{{-- PROFIL SIDEBAR BAWAH --}}
         <div class="p-4 border-t border-white/10 shrink-0 hover:bg-white/5 transition flex items-center justify-between">
-            
-            {{-- Bagian ini dibungkus tag <a> agar bisa diklik menuju profil --}}
             <a href="{{ route('profil') }}" class="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition">
                 <div class="w-9 h-9 rounded-full bg-white text-primary-dark flex items-center justify-center font-semibold text-[14px]">
                     {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 2)) : 'FA' }}
@@ -268,7 +265,7 @@
                         {{-- Kolom Kiri: Inputan Text --}}
                         <div class="col-span-1 flex flex-col gap-5">
                             
-                            {{-- BLOK PESAN ERROR (Agar kalau gagal kelihatan alasannya) --}}
+                            {{-- BLOK PESAN ERROR --}}
                             @if ($errors->any())
                                 <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-[8px]">
                                     <strong class="font-semibold text-[13px]">Gagal menyimpan!</strong>
@@ -361,31 +358,28 @@
         </main>
     </div>
 
-   {{-- ================= SCRIPT PETA (LEAFLET) ================= --}}
+    {{-- ================= SCRIPT PETA (LEAFLET) ================= --}}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 
     @if($mode == 'create' || $mode == 'edit')
         <script>
             // Script khusus untuk mode Create & Edit (Bisa menggambar peta)
-            // Default diubah dari Bandung Kota ke Titik Tengah Ciwidey
             const existingLat = document.getElementById('latitude').value || -7.1044;
             const existingLng = document.getElementById('longitude').value || 107.3914;
             
             // Batas Area Kecamatan Ciwidey
             const ciwideyBounds = [
-                [-7.2000, 107.3000], // Selatan-Barat
-                [-7.0000, 107.5000]  // Utara-Timur
+                [-7.2000, 107.3000],
+                [-7.0000, 107.5000]  
             ];
 
-            // Inisialisasi Peta dengan Batas Ciwidey
             const map = L.map('map', {
                 maxBounds: ciwideyBounds,
                 maxBoundsViscosity: 1.0,
                 minZoom: 12
             }).setView([existingLat, existingLng], 14);
             
-            // Menggunakan Peta Satelit agar lahan terlihat jelas
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: '© Esri'
             }).addTo(map);
@@ -399,65 +393,101 @@
             });
             map.addControl(drawControl);
 
-            // Jika mode edit, render polygon lamanya
+            // Fungsi untuk update nilai input hidden ke database
+            function updateHiddenInput() {
+                const data = drawnItems.toGeoJSON();
+                
+                if (data.features.length === 0) {
+                    document.getElementById('titik_batas').value = '';
+                    document.getElementById('latitude').value = '';
+                    document.getElementById('longitude').value = '';
+                } else {
+                    const geom = data.features[0].geometry;
+                    document.getElementById('titik_batas').value = JSON.stringify(geom);
+                    
+                    const layer = drawnItems.getLayers()[0];
+                    if (layer instanceof L.Polygon) {
+                        const center = layer.getBounds().getCenter();
+                        document.getElementById('latitude').value = center.lat;
+                        document.getElementById('longitude').value = center.lng;
+                    }
+                }
+            }
+
+            // Jika mode edit, ambil geojson dari database dan render
             @if($mode == 'edit')
-                const existingGeo = @json($lahan->titik_batas ?? null);
-                if (existingGeo) {
-                    const layer = L.geoJSON(existingGeo);
-                    layer.eachLayer(l => drawnItems.addLayer(l));
-                    map.fitBounds(layer.getBounds());
+                try {
+                    let existingGeo = {!! json_encode($lahan->titik_batas ?? null) !!};
+                    if (existingGeo) {
+                        // Jika ternyata string ganda, maka di-parse dulu
+                        if (typeof existingGeo === 'string') {
+                            existingGeo = JSON.parse(existingGeo);
+                        }
+                        
+                        const layer = L.geoJSON(existingGeo);
+                        layer.eachLayer(l => drawnItems.addLayer(l));
+                        
+                        map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+                        
+                        // Perbarui form hidden agar aman kalau langsung ditekan Simpan
+                        document.getElementById('titik_batas').value = JSON.stringify(existingGeo);
+                    }
+                } catch (e) {
+                    console.error("Gagal memuat poligon:", e);
                 }
             @endif
 
+            // Update input hidden saat terjadi penambahan, pengeditan, atau penghapusan
             map.on(L.Draw.Event.CREATED, function(e) {
-                drawnItems.clearLayers();
+                drawnItems.clearLayers(); // Maksimal 1 poligon saja
                 drawnItems.addLayer(e.layer);
-                document.getElementById('titik_batas').value = JSON.stringify(e.layer.toGeoJSON().geometry);
-                
-                if (e.layerType === 'polygon') {
-                    const center = e.layer.getBounds().getCenter();
-                    document.getElementById('latitude').value = center.lat;
-                    document.getElementById('longitude').value = center.lng;
-                }
+                updateHiddenInput();
+            });
+
+            map.on(L.Draw.Event.EDITED, function(e) {
+                updateHiddenInput();
+            });
+
+            map.on(L.Draw.Event.DELETED, function(e) {
+                updateHiddenInput();
             });
         </script>
     @elseif($mode == 'show')
         <script>
-            // Script khusus untuk mode Show (Hanya melihat peta, tidak bisa digambar)
-            // Default diubah ke Titik Tengah Ciwidey
+            // Script khusus untuk mode Show (Hanya melihat peta)
             const lat = {{ $lahan->latitude ?? -7.1044 }};
             const lng = {{ $lahan->longitude ?? 107.3914 }};
             
-            // Batas Area Kecamatan Ciwidey
             const ciwideyBounds = [
                 [-7.2000, 107.3000],
                 [-7.0000, 107.5000]
             ];
 
-            // Inisialisasi Peta dengan Batas Ciwidey
             const map = L.map('map', {
                 maxBounds: ciwideyBounds,
                 maxBoundsViscosity: 1.0,
                 minZoom: 12
             }).setView([lat, lng], 15);
             
-            // Menggunakan Peta Satelit
             L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: '© Esri'
             }).addTo(map);
 
-            const geoData = @json($lahan->titik_batas ?? null);
-            if(geoData) {
-                // Warna garis polygon dibuat lebih terang agar kontras dengan warna gelap satelit
-                const layer = L.geoJSON(geoData, { style: { color: '#43B75D', fillColor: '#43B75D', fillOpacity: 0.5, weight: 3 } }).addTo(map);
-                map.fitBounds(layer.getBounds());
-            } else {
-                L.marker([lat, lng]).addTo(map);
+            try {
+                let geoData = {!! json_encode($lahan->titik_batas ?? null) !!};
+                if(geoData) {
+                    if (typeof geoData === 'string') geoData = JSON.parse(geoData);
+                    const layer = L.geoJSON(geoData, { style: { color: '#43B75D', fillColor: '#43B75D', fillOpacity: 0.5, weight: 3 } }).addTo(map);
+                    map.fitBounds(layer.getBounds());
+                } else {
+                    L.marker([lat, lng]).addTo(map);
+                }
+            } catch (e) {
+                console.error("Gagal merender mode show", e);
             }
         </script>
     @endif
             
-    {{-- TAMBAHKAN SCRIPT INI TEPAT DI SINI (Sebelum tag body tutup) --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // Logika pop-up konfirmasi hapus lahan

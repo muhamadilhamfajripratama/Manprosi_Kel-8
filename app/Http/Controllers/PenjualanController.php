@@ -3,33 +3,53 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Penjualan;
 use App\Models\HasilPanen;
-use App\Models\Penjualan; // <--- Ini kunci agar error "Not Found" hilang!
+use App\Models\BatchTanam;
 use App\Models\Invoice;
+use Illuminate\Support\Facades\Auth;
 
 class PenjualanController extends Controller
 {
-    public function index()
+public function index()
     {
-        // 1. Ambil data stok panen (hanya yang stoknya > 0)
-        $panens = HasilPanen::with('batchTanam')->whereRaw('jumlah_kg - (SELECT COALESCE(SUM(jumlah_kg), 0) FROM penjualan WHERE penjualan.hasil_panen_id = hasil_panen.id) > 0')->get();
+        $userId = Auth::id();
 
-        // 2. Hitung metrik dari SELURUH data penjualan
-        $totalPendapatan = Penjualan::sum('total_harga');
-        $totalTransaksi = Penjualan::count();
+        // 1. Ambil data stok panen milik user
+        $panens = HasilPanen::with('batchTanam')
+            ->whereHas('batchTanam.lahan', function($q) use ($userId) {
+                $q->where('petani_id', $userId);
+            })
+            ->whereRaw('jumlah_kg - (SELECT COALESCE(SUM(jumlah_kg), 0) FROM penjualan WHERE penjualan.hasil_panen_id = hasil_panen.id) > 0')
+            ->get();
 
-        // 3. Cari Komoditas Terlaris
+        // 2. Hitung metrik dari SELURUH data penjualan milik user
+        $totalPendapatan = Penjualan::whereHas('hasilPanen.batchTanam.lahan', function($q) use ($userId) {
+            $q->where('petani_id', $userId);
+        })->sum('total_harga');
+
+        $totalTransaksi = Penjualan::whereHas('hasilPanen.batchTanam.lahan', function($q) use ($userId) {
+            $q->where('petani_id', $userId);
+        })->count();
+
+        // 3. Cari Komoditas Terlaris (FIXED: Tabel lahan tanpa 's')
         $terlaris = Penjualan::selectRaw('hasil_panen.komoditas, SUM(penjualan.jumlah_kg) as total_kg')
             ->join('hasil_panen', 'penjualan.hasil_panen_id', '=', 'hasil_panen.id')
+            ->join('batch_tanam', 'hasil_panen.batch_id', '=', 'batch_tanam.id')
+            ->join('lahan', 'batch_tanam.lahan_id', '=', 'lahan.id')
+            ->where('lahan.petani_id', $userId)
             ->groupBy('hasil_panen.komoditas')
             ->orderByDesc('total_kg')
             ->first();
         $komoditasTerlaris = $terlaris ? $terlaris->komoditas : 'Belum ada data';
 
-        // 4. Ambil data riwayat penjualan dengan Pagination
-        $riwayats = Penjualan::with('hasilPanen.batchTanam')->orderBy('tanggal', 'desc')->paginate(10);
+        // 4. Riwayat Penjualan 
+        $riwayats = Penjualan::with('hasilPanen.batchTanam')
+            ->whereHas('hasilPanen.batchTanam.lahan', function($q) use ($userId) {
+                $q->where('petani_id', $userId);
+            })
+            ->orderBy('tanggal', 'desc')->paginate(10);
         
-        // Hitung subtotal untuk halaman aktif
         $subtotalKg = $riwayats->sum('jumlah_kg');
         $subtotalRp = $riwayats->sum('total_harga');
 

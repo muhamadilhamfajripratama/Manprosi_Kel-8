@@ -35,16 +35,23 @@ Route::middleware('auth')->group(function () {
     // Proses Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Dashboard Utama
+    // Dashboard Utama
     Route::get('/', function () { 
-        $lahans = \App\Models\Lahan::with('petani')->get();
+        // Ambil ID user yang sedang login
+        $userId = \Illuminate\Support\Facades\Auth::id();
+
+        // 1. Ambil data lahan HANYA milik user ini
+        $lahans = \App\Models\Lahan::with('petani')->where('petani_id', $userId)->get();
         $totalLahan = $lahans->sum('luas_ha');
 
-        // Ambil data batch aktif beserta relasi lahannya
-        $batchesAktif = \App\Models\BatchTanam::with('lahan')->where('status', 'aktif')->orderBy('tanggal_tanam', 'desc')->get();
+        // 2. Ambil data batch aktif HANYA di lahan milik user ini
+        $batchesAktif = \App\Models\BatchTanam::whereHas('lahan', function($query) use ($userId) {
+            $query->where('petani_id', $userId);
+        })->with('lahan')->where('status', 'aktif')->orderBy('tanggal_tanam', 'desc')->get();
+        
         $totalBatch = $batchesAktif->count(); 
 
-        // Kalkulasi Sisa Hari Panen
+        // 3. Kalkulasi Sisa Hari Panen
         $estimasiPanen = null;
         foreach ($batchesAktif as $batch) {
             $tglPanen = \Carbon\Carbon::parse($batch->tanggal_tanam)->addDays($batch->durasi_standar_hari);
@@ -58,8 +65,53 @@ Route::middleware('auth')->group(function () {
         }
         $estimasiPanen = $estimasiPanen ?? 0;
 
-        // Menghitung pendapatan
-        $totalPendapatanRaw = class_exists(\App\Models\Penjualan::class) ? \App\Models\Penjualan::sum('total_harga') : 0;
+        // =========================================================
+        // ALGORITMA PREDIKSI STOK PANEN (30 HARI KE DEPAN)
+        // =========================================================
+        $prediksiVolumeKg = 0;
+        $detailPrediksi = []; // Array baru untuk menampung rincian ke pop-up
+        
+        $batchAkanPanen = $batchesAktif->filter(function ($batch) {
+            $tglPanen = \Carbon\Carbon::parse($batch->tanggal_tanam)->addDays($batch->durasi_standar_hari);
+            $sisaHari = \Carbon\Carbon::now()->diffInDays($tglPanen, false);
+            return $sisaHari >= 0 && $sisaHari <= 30;
+        });
+
+        if ($batchAkanPanen->count() > 0) {
+            foreach ($batchAkanPanen as $batch) {
+                $riwayatPanen = \App\Models\HasilPanen::where('hasil_panen.komoditas', $batch->komoditas)
+                    ->join('batch_tanam', 'hasil_panen.batch_id', '=', 'batch_tanam.id')
+                    ->join('lahan', 'batch_tanam.lahan_id', '=', 'lahan.id') 
+                    ->where('lahan.petani_id', $userId)
+                    ->select(\Illuminate\Support\Facades\DB::raw('SUM(hasil_panen.jumlah_kg) as total_kg, SUM(lahan.luas_ha) as total_ha'))
+                    ->first();
+
+                $rataRataKgPerHa = ($riwayatPanen && $riwayatPanen->total_ha > 0) 
+                                    ? ($riwayatPanen->total_kg / $riwayatPanen->total_ha) 
+                                    : 6000; 
+
+                $luasLahan = $batch->lahan->luas_ha ?? 0;
+                $estimasiBatch = $luasLahan * $rataRataKgPerHa;
+                $prediksiVolumeKg += $estimasiBatch;
+
+                // Simpan rincian data untuk ditampilkan di SweetAlert
+                $detailPrediksi[] = [
+                    'komoditas' => $batch->komoditas,
+                    'lahan'     => $batch->lahan->nama_lahan ?? 'Unknown',
+                    'luas'      => $luasLahan,
+                    'estimasi'  => $estimasiBatch >= 1000 ? number_format($estimasiBatch / 1000, 1) . ' Ton' : number_format($estimasiBatch, 0) . ' Kg'
+                ];
+            }
+        }
+
+        $prediksiStokTeks = $prediksiVolumeKg >= 1000 
+            ? number_format($prediksiVolumeKg / 1000, 1) . ' Ton' 
+            : number_format($prediksiVolumeKg, 0) . ' Kg';
+        // =========================================================
+
+        // 4. Menghitung pendapatan
+        $totalPendapatanRaw = 0; 
+        
         if ($totalPendapatanRaw >= 1000000000) {
             $pendapatan = round($totalPendapatanRaw / 1000000000, 1) . 'B'; 
         } elseif ($totalPendapatanRaw >= 1000000) {
@@ -70,7 +122,7 @@ Route::middleware('auth')->group(function () {
             $pendapatan = number_format($totalPendapatanRaw, 0, ',', '.');
         }
 
-        // Ambil jumlah notifikasi
+        // 5. Ambil jumlah notifikasi
         $jumlahNotif = \App\Models\BatchTanam::countNotifikasiPanen();
 
         return view('dashboard', compact(
@@ -80,7 +132,9 @@ Route::middleware('auth')->group(function () {
             'estimasiPanen', 
             'pendapatan',
             'batchesAktif',
-            'jumlahNotif'
+            'jumlahNotif',
+            'prediksiStokTeks',
+            'detailPrediksi'
         )); 
     })->name('dashboard');
 
@@ -89,7 +143,15 @@ Route::middleware('auth')->group(function () {
         return view('peta_gis', compact('lahans'));
     })->name('peta.gis');
 
+    // ==========================================================
+    // RUTE PROFIL DINAMIS
+    // ==========================================================
     Route::get('/profil', function () {
+        // Cek jika Admin, panggil file di dalam folder admin/
+        if (auth()->check() && auth()->user()->role === 'admin') {
+            return view('admin.profil');
+        }
+        // Jika Petani/Distributor, panggil file profil biasa
         return view('profil');
     })->name('profil');
 
@@ -111,34 +173,43 @@ Route::middleware('auth')->group(function () {
     Route::post('/pemupukan', [PemupukanController::class, 'store'])->name('pemupukan.store');
     Route::put('/pemupukan/{id}', [App\Http\Controllers\PemupukanController::class, 'update'])->name('pemupukan.update');
     Route::delete('/pemupukan/{id}', [App\Http\Controllers\PemupukanController::class, 'destroy'])->name('pemupukan.destroy');
+    
     Route::get('/penanaman', [PenanamanController::class, 'index'])->name('penanaman');
     Route::post('/penanaman', [PenanamanController::class, 'store'])->name('penanaman.store');
     Route::put('/penanaman/{id}', [PenanamanController::class, 'update'])->name('penanaman.update');
     Route::delete('/penanaman/{id}', [PenanamanController::class, 'destroy'])->name('penanaman.destroy');
     Route::get('/penanaman/detail/{id}', [PenanamanController::class, 'show'])->name('penanaman.detail');
+    
     Route::get('/irigasi', [IrigasiController::class, 'index'])->name('irigasi');
     Route::post('/irigasi', [IrigasiController::class, 'store'])->name('irigasi.store');
     Route::put('/irigasi/{id}', [IrigasiController::class, 'update'])->name('irigasi.update');
     Route::delete('/irigasi/{id}', [IrigasiController::class, 'destroy'])->name('irigasi.destroy');
+    
     Route::get('/hama', [HamaController::class, 'index'])->name('hama');
     Route::post('/hama', [HamaController::class, 'store'])->name('hama.store');
     Route::put('/hama/{id}', [HamaController::class, 'update'])->name('hama.update');
     Route::delete('/hama/{id}', [HamaController::class, 'destroy'])->name('hama.destroy');
+    
     Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi');
+    
     Route::get('/perawatan', [App\Http\Controllers\PerawatanController::class, 'index'])->name('perawatan');
     Route::post('/perawatan', [App\Http\Controllers\PerawatanController::class, 'store'])->name('perawatan.store');
     Route::put('/perawatan/{id}', [PerawatanController::class, 'update'])->name('perawatan.update');
     Route::delete('/perawatan/{id}', [PerawatanController::class, 'destroy'])->name('perawatan.destroy');
+    
     Route::get('/panen', [App\Http\Controllers\PanenController::class, 'index'])->name('panen');
     Route::post('/panen', [App\Http\Controllers\PanenController::class, 'store'])->name('panen.store');
     Route::put('/panen/{id}', [PanenController::class, 'update'])->name('panen.update');
     Route::delete('/panen/{id}', [PanenController::class, 'destroy'])->name('panen.destroy');
+    
     Route::get('/penjualan', [App\Http\Controllers\PenjualanController::class, 'index'])->name('penjualan');
     Route::post('/penjualan', [App\Http\Controllers\PenjualanController::class, 'store'])->name('penjualan.store');
     Route::get('/penjualan/invoice/{id}', [App\Http\Controllers\PenjualanController::class, 'invoice'])->name('penjualan.invoice');
+    
     Route::get('/laporan', [App\Http\Controllers\LaporanController::class, 'index'])->name('laporan');
     Route::get('/jadwal', [App\Http\Controllers\JadwalController::class, 'index'])->name('jadwal');
-    
+    Route::post('/permintaan/{id}/status', [App\Http\Controllers\NotifikasiController::class, 'updateStatus'])->name('permintaan.update_status');
+
     // Route Resource (Otomatis membuat rute CRUD untuk lahan)
     Route::resource('lahan', LahanController::class);
 
@@ -151,26 +222,106 @@ Route::middleware('auth')->group(function () {
     // Distributor Routes
     // ----------------------------------------
     Route::get('/distributor/dashboard', function () { 
-        // Ambil semua data lahan beserta info petaninya
         $lahans = \App\Models\Lahan::with('petani')->get();
-        return view('distributor.dashboard', compact('lahans')); 
+
+        // =========================================================
+        // ALGORITMA PREDIKSI SUPLAI PANEN 30 HARI (DISTRIBUTOR)
+        // =========================================================
+        $prediksiVolumeKg = 0;
+        $detailPrediksi = [];
+
+        // 1. Ambil semua batch aktif dari SELURUH petani
+        $batchesAktif = \App\Models\BatchTanam::with(['lahan.petani'])->where('status', 'aktif')->get();
+
+        // 2. Filter batch yang akan panen dalam waktu 0 - 30 hari
+        $batchAkanPanen = $batchesAktif->filter(function ($batch) {
+            $tglPanen = \Carbon\Carbon::parse($batch->tanggal_tanam)->addDays($batch->durasi_standar_hari);
+            $sisaHari = \Carbon\Carbon::now()->diffInDays($tglPanen, false);
+            return $sisaHari >= 0 && $sisaHari <= 30;
+        });
+
+        if ($batchAkanPanen->count() > 0) {
+            foreach ($batchAkanPanen as $batch) {
+                // 3. Hitung Rata-rata Historis Panen per komoditas secara dinamis
+                $riwayatPanen = \App\Models\HasilPanen::where('hasil_panen.komoditas', $batch->komoditas)
+                    ->join('batch_tanam', 'hasil_panen.batch_id', '=', 'batch_tanam.id')
+                    ->join('lahan', 'batch_tanam.lahan_id', '=', 'lahan.id') 
+                    ->select(\Illuminate\Support\Facades\DB::raw('SUM(hasil_panen.jumlah_kg) as total_kg, SUM(lahan.luas_ha) as total_ha'))
+                    ->first();
+
+                $rataRataKgPerHa = ($riwayatPanen && $riwayatPanen->total_ha > 0) 
+                                    ? ($riwayatPanen->total_kg / $riwayatPanen->total_ha) 
+                                    : 6000; 
+
+                // 4. Kalkulasi estimasi dan simpan data untuk pop-up detail
+                $luasLahan = $batch->lahan->luas_ha ?? 0;
+                $estimasiBatch = $luasLahan * $rataRataKgPerHa;
+                $prediksiVolumeKg += $estimasiBatch;
+
+                $detailPrediksi[] = [
+                    'petani'    => $batch->lahan->petani->name ?? 'Petani Tidak Diketahui',
+                    'komoditas' => $batch->komoditas,
+                    'lahan'     => $batch->lahan->nama_lahan ?? 'Unknown',
+                    'luas'      => $luasLahan,
+                    'estimasi'  => $estimasiBatch >= 1000 ? number_format($estimasiBatch / 1000, 1) . ' Ton' : number_format($estimasiBatch, 0) . ' Kg'
+                ];
+            }
+        }
+
+        $prediksiStokTeks = $prediksiVolumeKg >= 1000 
+            ? number_format($prediksiVolumeKg / 1000, 1) . ' Ton' 
+            : number_format($prediksiVolumeKg, 0) . ' Kg';
+        // =========================================================
+
+        return view('distributor.dashboard', compact('lahans', 'prediksiStokTeks', 'detailPrediksi')); 
     })->name('distributor.dashboard');
 
-    // Rute Baru: Pembelian Panen
+    Route::get('/distributor/mitra', function () { 
+        $mitras = \App\Models\User::where('role', 'petani')->get();
+        
+        foreach($mitras as $mitra) {
+            $mitra->total_lahan = \App\Models\Lahan::where('petani_id', $mitra->id)->sum('luas_ha');
+            
+            $komoditas = \App\Models\BatchTanam::whereHas('lahan', function($query) use ($mitra) {
+                            $query->where('petani_id', $mitra->id);
+                        })
+                        ->pluck('komoditas')
+                        ->filter()
+                        ->unique()
+                        ->implode(', ');
+
+            $mitra->list_komoditas = $komoditas ?: 'Bawang Putih Bonggol';
+        }
+
+        return view('distributor.mitra', compact('mitras')); 
+    })->name('distributor.mitra');
+
     Route::get('/distributor/pembelian', function () { 
-        return view('distributor.pembelian'); 
+        $permintaans = \App\Models\Permintaan::latest()->get();
+        return view('distributor.pembelian', compact('permintaans')); 
     })->name('distributor.pembelian');
 
-    // Rute Baru: Daftar Mitra Petani
-    Route::get('/distributor/mitra', function () { 
-        return view('distributor.mitra'); 
-    })->name('distributor.mitra');
+    Route::post('/distributor/permintaan', [App\Http\Controllers\DistributorController::class, 'kirimPermintaan'])->name('distributor.permintaan.store');
+
+    Route::post('/distributor/permintaan/{id}/bayar', function ($id) {
+        $permintaan = \App\Models\Permintaan::find($id);
+        if($permintaan) {
+            $permintaan->status = 'lunas';
+            $permintaan->save();
+        }
+        return response()->json(['success' => true]);
+    })->name('distributor.permintaan.bayar');
 
     // ----------------------------------------
     // Admin Routes
     // ----------------------------------------
-    Route::get('/admin/pengguna', function () { 
-        return view('admin.pengguna'); 
+    Route::prefix('admin')->group(function () {
+        Route::get('/pengguna', [\App\Http\Controllers\AdminController::class, 'pengguna'])->name('admin.pengguna');
+        Route::post('/pengguna', [\App\Http\Controllers\AdminController::class, 'storePengguna'])->name('admin.pengguna.store');
+        Route::put('/pengguna/{id}', [\App\Http\Controllers\AdminController::class, 'updatePengguna'])->name('admin.pengguna.update');
+        Route::delete('/pengguna/{id}', [\App\Http\Controllers\AdminController::class, 'destroyPengguna'])->name('admin.pengguna.destroy');
+        
+        // FIXED: URL diubah menjadi /backup saja karena sudah di dalam prefix 'admin'
+        Route::get('/backup', [\App\Http\Controllers\AdminController::class, 'backup'])->name('admin.backup'); 
     });
-
 });

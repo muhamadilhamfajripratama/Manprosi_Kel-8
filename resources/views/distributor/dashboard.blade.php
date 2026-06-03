@@ -33,7 +33,7 @@
             <h1 class="text-[20px] font-semibold tracking-wide">Distributor</h1>
         </div>
 
-<nav class="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-1.5 sidebar-scroll">
+        <nav class="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-1.5 sidebar-scroll">
             <div class="text-[10px] font-semibold text-white/50 tracking-wider uppercase mb-2 px-3">Menu Utama</div>
             
             <a href="{{ route('distributor.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 {{ request()->routeIs('distributor.dashboard') ? 'bg-primary-mid border-l-[3px] border-white text-white font-semibold rounded-r-lg' : 'text-white/70 hover:bg-white/5 hover:text-white rounded-lg' }} transition">
@@ -78,7 +78,7 @@
         {{-- CONTAINER PETA --}}
         <div id="map-distributor" class="w-full h-full"></div>
 
-        {{-- FLOATING PANEL: PENCARIAN KOMODITAS --}}
+        {{-- FLOATING PANEL KIRI: PENCARIAN KOMODITAS --}}
         <div class="absolute top-20 left-6 w-[320px] bg-white rounded-[16px] shadow-floating p-5 z-[1000] border border-gray-100">
             <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-3">
                 <div class="w-8 h-8 rounded-full bg-primary-light text-primary-dark flex items-center justify-center"><i class="ph ph-magnifying-glass text-lg"></i></div>
@@ -109,8 +109,22 @@
             
             <div class="mt-4 pt-3 border-t border-gray-100">
                 <p class="text-[10px] text-gray-400 text-center flex items-center justify-center gap-1">
-                    <i class="ph ph-info"></i> Klik area hijau pada peta untuk melihat detail petani dan luas lahan.
+                    <i class="ph ph-info"></i> Klik area pada peta untuk detail.
                 </p>
+            </div>
+        </div>
+
+        {{-- FLOATING PANEL KANAN: PREDIKSI PANEN 30 HARI --}}
+        <div onclick="lihatDetailPrediksi()" class="absolute top-20 right-6 w-[320px] bg-gradient-to-br from-amber-600 to-amber-500 rounded-[16px] p-5 shadow-floating z-[1000] cursor-pointer hover:scale-[1.02] transition-transform border border-amber-400/50 flex items-center justify-between text-white">
+            <div>
+                <p class="text-white/80 text-[11px] font-bold uppercase tracking-wider mb-1">Estimasi Suplai (30 Hari)</p>
+                <h3 class="text-2xl font-bold">{{ $prediksiStokTeks ?? '0 Kg' }}</h3>
+                <p class="text-[10px] text-white/80 mt-1 flex items-center gap-1">
+                    <i class="ph ph-hand-tap"></i> Klik lihat detail sumber
+                </p>
+            </div>
+            <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm shrink-0">
+                <i class="ph ph-truck text-2xl text-white"></i>
             </div>
         </div>
 
@@ -152,7 +166,7 @@
                             </div>
                         `, { sticky: true, opacity: 0.95 });
 
-                        polyLayer.on('mouseover', function () { this.setStyle({ fillOpacity: 0.9, weight: 3, color: '#F59E0B', fillColor: '#F59E0B' }); }); // Berubah oranye saat di-hover distributor
+                        polyLayer.on('mouseover', function () { this.setStyle({ fillOpacity: 0.9, weight: 3, color: '#F59E0B', fillColor: '#F59E0B' }); });
                         polyLayer.on('mouseout', function () { this.setStyle({ fillOpacity: 0.6, weight: 2, color: warna, fillColor: warna }); });
 
                         localItems.push({ data: lahan, layer: polyLayer, komoditasTxt: komoditasName.toString().toLowerCase() });
@@ -172,7 +186,6 @@
                 let match = true;
                 const luasHa = parseFloat(item.data.luas_ha) || 0;
 
-                // Distributor fokus mencari berdasarkan nama komoditas
                 if(txtKomoditas && !item.komoditasTxt.includes(txtKomoditas)) match = false;
                 if(txtLuas > 0 && luasHa < txtLuas) match = false;
 
@@ -196,6 +209,51 @@
         }
 
         eksekusiFilter();
+    </script>
+
+    {{-- SCRIPT SWEETALERT UNTUK POP-UP PREDIKSI --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function lihatDetailPrediksi() {
+            const details = @json($detailPrediksi ?? []);
+            
+            if(details.length === 0) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Belum Ada Suplai',
+                    text: 'Tidak ada jadwal panen dari mitra dalam 30 hari ke depan.',
+                    confirmButtonColor: '#B45309'
+                });
+                return;
+            }
+
+            let htmlContent = '<div class="text-left space-y-3 mt-4 text-[13px] max-h-[60vh] overflow-y-auto pr-2">';
+            details.forEach(item => {
+                htmlContent += `
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
+                        <div>
+                            <strong class="text-gray-900 block text-[15px] mb-1">${item.petani}</strong>
+                            <span class="text-gray-500 text-[12px] flex items-center gap-1">
+                                <i class="ph ph-map-pin"></i> ${item.lahan} (${item.luas} Ha)
+                            </span>
+                            <span class="text-primary-dark font-semibold text-[11px] mt-1 block px-2 py-0.5 bg-primary-light rounded w-fit">
+                                ${item.komoditas}
+                            </span>
+                        </div>
+                        <strong class="text-amber-600 text-xl font-bold">${item.estimasi}</strong>
+                    </div>
+                `;
+            });
+            htmlContent += '</div>';
+
+            Swal.fire({
+                title: 'Rincian Suplai Mitra',
+                html: htmlContent,
+                icon: 'info',
+                confirmButtonColor: '#B45309',
+                confirmButtonText: 'Tutup'
+            });
+        }
     </script>
 </body>
 </html>

@@ -5,32 +5,33 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\BatchTanam; 
 use App\Models\KegiatanPemupukan;
+use Illuminate\Support\Facades\Auth;
 
 class PemupukanController extends Controller
 {
-    // Menampilkan halaman dan mengambil data dari database
-    public function index()
+public function index()
     {
-        // Cukup panggil BatchTanam langsung
-        $batches = BatchTanam::with('lahan')->where('status', 'aktif')->get(); 
+        $userId = \Illuminate\Support\Facades\Auth::id();
+
+        // Ambil kumpulan ID Batch yang sah milik petani ini
+        $validBatchIds = \App\Models\BatchTanam::whereHas('lahan', function($q) use ($userId) {
+            $q->where('petani_id', $userId);
+        })->pluck('id');
+
+        $batches = \App\Models\BatchTanam::with('lahan')->whereIn('id', $validBatchIds)->where('status', 'aktif')->get(); 
         
-        // Cukup panggil KegiatanPemupukan langsung
-        $riwayats = KegiatanPemupukan::orderBy('tanggal', 'desc')->get();
+        $riwayats = \App\Models\KegiatanPemupukan::whereIn('batch_id', $validBatchIds)->orderBy('tanggal', 'desc')->get();
 
-        // HITUNG STATISTIK ASLI (Responsif)
         $totalBiaya = $riwayats->sum(function ($item) {
-            return $item->total_biaya; // Memanggil accessor dari Model
+            return $item->total_biaya; 
         });
-        $totalPemupukan = $riwayats->count(); // Menghitung total baris
+        $totalPemupukan = $riwayats->count(); 
 
-        // Kirim semuanya ke view
         return view('pemupukan', compact('batches', 'riwayats', 'totalBiaya', 'totalPemupukan'));
     }
 
-    // Menyimpan data saat tombol di modal diklik
     public function store(Request $request)
     {
-        // 1. SATPAM VALIDASI: Mencegah crash jika data kosong
         $request->validate([
             'batch_id'    => 'required',
             'tanggal'     => 'required|date',
@@ -38,12 +39,10 @@ class PemupukanController extends Controller
             'dosis'       => 'required|numeric',
             'harga_beli'  => 'required|numeric', 
         ], [
-            // Pesan error kustom jika kosong
             'batch_id.required'   => 'Kamu harus memilih Batch Tanam terlebih dahulu!',
             'harga_beli.required' => 'Harga beli pupuk tidak boleh kosong!',
         ]);
 
-        // 2. Jika lolos validasi, baru simpan ke database
         KegiatanPemupukan::create([
             'batch_id'    => $request->batch_id,
             'tanggal'     => $request->tanggal,
@@ -58,7 +57,6 @@ class PemupukanController extends Controller
         return redirect()->back()->with('success', 'Data pemupukan berhasil dicatat!');
     }
 
-    // Mengupdate data saat tombol simpan edit diklik
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -83,13 +81,11 @@ class PemupukanController extends Controller
         return redirect()->back()->with('success', 'Data pemupukan berhasil diperbarui!');
     }
 
-    // Menghapus data saat konfirmasi SweetAlert disetujui
     public function destroy($id)
     {
         try {
             $pemupukan = KegiatanPemupukan::findOrFail($id);
             $pemupukan->delete();
-            
             return redirect()->back()->with('success', 'Data pemupukan berhasil dihapus!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Terjadi kesalahan saat menghapus data.');

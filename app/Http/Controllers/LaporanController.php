@@ -6,42 +6,59 @@ use Illuminate\Http\Request;
 use App\Models\Penjualan;
 use App\Models\BatchTanam;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class LaporanController extends Controller
 {
-    public function index()
+public function index()
     {
-        // 1. KPI UTAMA (Kartu Atas)
-        $totalPendapatan = class_exists(Penjualan::class) ? Penjualan::sum('total_harga') : 0;
+        $userId = Auth::id();
+
+        // 1. KPI UTAMA (Dikunci untuk User Login)
+        $totalPendapatan = class_exists(Penjualan::class) 
+            ? Penjualan::whereHas('hasilPanen.batchTanam.lahan', function($q) use ($userId) {
+                $q->where('petani_id', $userId);
+            })->sum('total_harga') 
+            : 0;
         
-        // Asumsi mengambil biaya dari tabel kegiatan_perawatan (dan tabel lain jika ada)
+        // FIXED: Tabel lahan tanpa 's'
         $biayaPerawatan = \Illuminate\Support\Facades\Schema::hasTable('kegiatan_perawatan') 
-            ? DB::table('kegiatan_perawatan')->sum('biaya') : 0;
-        // Jika kamu punya tabel biaya pemupukan/hama, bisa ditambahkan di sini. 
-        // Sementara kita gunakan biaya perawatan sebagai basis total biaya.
+            ? DB::table('kegiatan_perawatan')
+                ->join('batch_tanam', 'kegiatan_perawatan.batch_id', '=', 'batch_tanam.id')
+                ->join('lahan', 'batch_tanam.lahan_id', '=', 'lahan.id')
+                ->where('lahan.petani_id', $userId)
+                ->sum('kegiatan_perawatan.biaya') 
+            : 0;
+            
         $totalBiaya = $biayaPerawatan; 
-        
         $labaBersih = $totalPendapatan - $totalBiaya;
 
-        // 2. DATA CHART BAR (Pendapatan vs Biaya per Bulan)
-        $bulanSekarang = Carbon::now()->month;
+        // 2. DATA CHART BAR
         $labelBulan = [];
         $dataPendapatanBulan = [];
         $dataBiayaBulan = [];
         $dataLabaBulan = [];
 
-        // Ambil data 5 bulan terakhir agar grafiknya cantik seperti di desain
         for ($i = 4; $i >= 0; $i--) {
             $bulan = Carbon::now()->subMonths($i);
-            $labelBulan[] = $bulan->translatedFormat('M'); // Jan, Feb, dst
+            $labelBulan[] = $bulan->translatedFormat('M'); 
 
-            $pendapatan = Penjualan::whereMonth('tanggal', $bulan->month)
+            $pendapatan = Penjualan::whereHas('hasilPanen.batchTanam.lahan', function($q) use ($userId) {
+                    $q->where('petani_id', $userId);
+                })
+                ->whereMonth('tanggal', $bulan->month)
                 ->whereYear('tanggal', $bulan->year)->sum('total_harga');
             
-            // Simulasi/Ambil biaya per bulan
+            // FIXED: Tabel lahan tanpa 's'
             $biaya = \Illuminate\Support\Facades\Schema::hasTable('kegiatan_perawatan') 
-                ? DB::table('kegiatan_perawatan')->whereMonth('tanggal', $bulan->month)->whereYear('tanggal', $bulan->year)->sum('biaya') 
+                ? DB::table('kegiatan_perawatan')
+                    ->join('batch_tanam', 'kegiatan_perawatan.batch_id', '=', 'batch_tanam.id')
+                    ->join('lahan', 'batch_tanam.lahan_id', '=', 'lahan.id')
+                    ->where('lahan.petani_id', $userId)
+                    ->whereMonth('kegiatan_perawatan.tanggal', $bulan->month)
+                    ->whereYear('kegiatan_perawatan.tanggal', $bulan->year)
+                    ->sum('kegiatan_perawatan.biaya') 
                 : 0;
 
             $dataPendapatanBulan[] = $pendapatan;
@@ -49,8 +66,7 @@ class LaporanController extends Controller
             $dataLabaBulan[] = $pendapatan - $biaya;
         }
 
-        // 3. DATA DOUGHNUT CHART (Komposisi Biaya)
-        // Jika tabel spesifik belum lengkap, kita gunakan persentase dummy untuk visualisasi awal
+        // 3. KOMPOSISI BIAYA (Dummy Visualisasi Awal)
         $komposisiBiaya = [
             'Pemupukan' => 35,
             'Pengendalian Hama' => 25,
@@ -58,13 +74,15 @@ class LaporanController extends Controller
             'Pengairan' => 20
         ];
 
-        // 4. DATA TOP BATCH TERPROFITABEL
-        // Mengambil batch aktif/selesai, diurutkan berdasarkan estimasi profit (Pendapatan dari batch tersebut)
+        // 4. TOP BATCH TERPROFITABEL (Dikunci untuk User Login)
+        // FIXED: Tabel lahan tanpa 's'
         $topBatches = [];
         if (class_exists(BatchTanam::class) && \Illuminate\Support\Facades\Schema::hasTable('hasil_panen')) {
             $topBatches = DB::table('batch_tanam')
+                ->join('lahan', 'batch_tanam.lahan_id', '=', 'lahan.id')
                 ->join('hasil_panen', 'batch_tanam.id', '=', 'hasil_panen.batch_id')
                 ->leftJoin('penjualan', 'hasil_panen.id', '=', 'penjualan.hasil_panen_id')
+                ->where('lahan.petani_id', $userId)
                 ->select(
                     'batch_tanam.komoditas',
                     'batch_tanam.tanggal_tanam',
