@@ -62,6 +62,13 @@
         </div>
     </aside>
 
+    {{-- LOGIKA PENGAMBILAN DATA PETANI DINAMIS --}}
+    @php
+        // Ambil semua user yang memiliki role 'petani' secara langsung di Blade
+        // agar dropdown pilihan target petani otomatis terisi dari database
+        $daftarPetani = \App\Models\User::where('role', 'petani')->get();
+    @endphp
+
     {{-- MAIN CONTENT --}}
     <main class="flex-1 flex flex-col min-w-0 bg-[#EEEEEE] overflow-y-auto">
         <header class="h-[64px] bg-white border-b border-gray-200 flex items-center px-8 shrink-0 z-10">
@@ -72,9 +79,8 @@
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="p-6 border-b border-gray-100 flex items-center justify-between">
                     <h3 class="text-[16px] font-bold text-primary-dark">Daftar Penawaran Panen</h3>
-                    {{-- TOMBOL BUAT PERMINTAAN --}}
-                    <button onclick="buatPermintaan()" class="bg-primary-dark text-white px-4 py-2 rounded-lg text-[13px] font-bold hover:bg-primary-mid transition flex items-center gap-2">
-                        <i class="ph ph-plus"></i> Buat Permintaan Pembelian
+                    <button onclick="buatPermintaan()" class="bg-primary-dark text-white px-4 py-2 rounded-lg text-[13px] font-bold hover:bg-primary-mid transition flex items-center gap-2 shadow-sm">
+                        <i class="ph ph-plus text-lg"></i> Buat Permintaan Pembelian
                     </button>
                 </div>
                 
@@ -86,6 +92,7 @@
                                 <th class="py-4 px-6">Mitra Petani</th>
                                 <th class="py-4 px-6">Komoditas</th>
                                 <th class="py-4 px-6">Kuantitas</th>
+                                <th class="py-4 px-6">Harga/Kg</th>
                                 <th class="py-4 px-6">Status</th>
                                 <th class="py-4 px-6 text-center">Aksi</th>
                             </tr>
@@ -99,6 +106,7 @@
                                     </td>
                                     <td class="py-4 px-6 font-semibold text-primary-dark">{{ $req->komoditas }}</td>
                                     <td class="py-4 px-6">{{ $req->kuantitas }} Ton</td>
+                                    <td class="py-4 px-6 font-semibold text-amber-600">Rp {{ number_format($req->harga ?? 0, 0, ',', '.') }}</td>
                                     <td class="py-4 px-6">
                                         @if($req->status == 'menunggu')
                                             <span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[11px] font-bold">Menunggu ACC</span>
@@ -113,15 +121,12 @@
                                         @endif
                                     </td>
                                     <td class="py-4 px-6 text-center flex justify-center gap-2 mt-2">
-                                        {{-- LOGIKA TOMBOL BERDASARKAN STATUS --}}
                                         @if($req->status == 'diterima')
-                                            {{-- Jika di ACC petani, muncul tombol BAYAR --}}
-                                            <button onclick="bayarPesanan({{ $req->id }}, '{{ $req->target_petani }}', '{{ $req->komoditas }}', {{ $req->kuantitas }})" class="bg-blue-500 text-white px-3 py-1.5 rounded text-[12px] font-semibold hover:bg-blue-600 transition shadow-sm">
+                                            <button onclick="bayarPesanan({{ $req->id }}, '{{ $req->target_petani }}', '{{ $req->komoditas }}', {{ $req->kuantitas }}, {{ $req->harga ?? 0 }})" class="bg-blue-500 text-white px-3 py-1.5 rounded text-[12px] font-semibold hover:bg-blue-600 transition shadow-sm">
                                                 Bayar Sekarang
                                             </button>
                                         @else
-                                            {{-- Jika selain 'diterima', muncul icon mata (Detail Dinamis) --}}
-                                            <button onclick="lihatDetail('REQ-00{{ $req->id }}', '{{ $req->target_petani }}', '{{ $req->komoditas }}', '{{ strtoupper($req->status) }}', '{{ $req->created_at->format('d M Y') }}')" class="text-gray-400 hover:text-primary-dark transition" title="Lihat Detail">
+                                            <button onclick="lihatDetail('REQ-00{{ $req->id }}', '{{ $req->target_petani }}', '{{ $req->komoditas }}', '{{ strtoupper($req->status) }}', '{{ $req->created_at->format('d M Y') }}', {{ $req->kuantitas }}, {{ $req->harga ?? 0 }})" class="text-gray-400 hover:text-primary-dark transition" title="Lihat Detail">
                                                 <i class="ph ph-eye text-xl"></i>
                                             </button>
                                         @endif
@@ -129,7 +134,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="py-10 text-center text-gray-400 font-semibold">
+                                    <td colspan="7" class="py-10 text-center text-gray-400 font-semibold">
                                         Belum ada data permintaan pembelian.
                                     </td>
                                 </tr>
@@ -141,33 +146,50 @@
         </div>
     </main>
 
-    {{-- SCRIPT UNTUK INTERAKSI TOMBOL --}}
     <script>
-// Fungsi untuk tombol "Buat Permintaan Pembelian" dengan AJAX
         function buatPermintaan() {
+            // Render options petani secara dinamis menggunakan JS Template Literal
+            let opsiPetani = `<option value="all">📢 Broadcast (Semua Mitra Petani)</option>`;
+            @foreach($daftarPetani as $petani)
+                opsiPetani += `<option value="{{ $petani->name }}">👨‍🌾 {{ $petani->name }}</option>`;
+            @endforeach
+
             Swal.fire({
-                title: 'Buat Permintaan Baru',
+                title: '<span class="text-[18px] font-bold text-gray-800">Buat Permintaan Baru</span>',
+                width: '450px', // Atur lebar pop-up agar lebih proporsional
                 html: `
-                    <div style="text-align: left; font-size: 13px; margin-top: 10px;">
-                        <label style="font-weight: bold; color: #555;">Kirim Ke:</label>
-                        <select id="swal-input-petani" class="swal2-input" style="width: 100%; margin-top: 5px; font-size: 14px;">
-                            <option value="all">📢 Broadcast (Semua Mitra Petani)</option>
-                            <option value="Fajri">👨‍🌾 Fajri (Lahan Ciwidey)</option>
-                            <option value="Reyhan">👨‍🌾 Reyhan (Lahan Ciwidey)</option>
-                            <option value="Faiza">👩‍🌾 Faiza (Lahan Lembang)</option>
-                            <option value="Alya">👩‍🌾 Alya (Lahan Pangalengan)</option>
-                        </select>
+                    <div class="text-left mt-2">
+                        <div class="mb-3.5">
+                            <label class="block text-[12px] font-bold text-gray-600 mb-1.5">Kirim Ke:</label>
+                            <select id="swal-input-petani" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-[13px] text-gray-700 bg-white focus:outline-none focus:border-primary-mid focus:ring-1 focus:ring-primary-mid shadow-sm transition">
+                                ${opsiPetani}
+                            </select>
+                        </div>
                         
-                        <label style="font-weight: bold; color: #555; display: block; margin-top: 15px;">Komoditas:</label>
-                        {{-- Field komoditas sekarang bebas diketik --}}
-                        <input id="swal-input-komoditas" type="text" class="swal2-input" style="width: 100%; margin-top: 5px; font-size: 14px;" placeholder="Ketik Komoditas (Misal: Sawi, Bawang...)">
+                        <div class="mb-3.5">
+                            <label class="block text-[12px] font-bold text-gray-600 mb-1.5">Komoditas:</label>
+                            <input id="swal-input-komoditas" type="text" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-[13px] text-gray-700 bg-white focus:outline-none focus:border-primary-mid focus:ring-1 focus:ring-primary-mid shadow-sm transition" placeholder="Misal: Bawang Putih Bonggol">
+                        </div>
                         
-                        <label style="font-weight: bold; color: #555; display: block; margin-top: 15px;">Kuantitas (Ton):</label>
-                        <input id="swal-input-kuantitas" type="number" step="0.1" class="swal2-input" style="width: 100%; margin-top: 5px; font-size: 14px;" placeholder="Misal: 5.5">
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <label class="block text-[12px] font-bold text-gray-600 mb-1.5">Kuantitas (Ton):</label>
+                                <input id="swal-input-kuantitas" type="number" step="0.1" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-[13px] text-gray-700 bg-white focus:outline-none focus:border-primary-mid focus:ring-1 focus:ring-primary-mid shadow-sm transition" placeholder="Misal: 5.5">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-[12px] font-bold text-gray-600 mb-1.5">Harga Penawaran (Rp/Kg):</label>
+                                <input id="swal-input-harga" type="number" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-[13px] text-gray-700 bg-white focus:outline-none focus:border-primary-mid focus:ring-1 focus:ring-primary-mid shadow-sm transition" placeholder="Misal: 15000">
+                            </div>
+                        </div>
                     </div>
                 `,
+                customClass: {
+                    popup: 'rounded-2xl',
+                    confirmButton: 'bg-primary-dark text-white px-5 py-2.5 rounded-lg text-[13px] font-bold shadow-sm',
+                    cancelButton: 'bg-gray-100 text-gray-600 px-5 py-2.5 rounded-lg text-[13px] font-bold hover:bg-gray-200'
+                },
+                buttonsStyling: false, // Matikan styling default SweetAlert untuk tombol
                 confirmButtonText: 'Kirim Permintaan',
-                confirmButtonColor: '#004F3B',
                 showCancelButton: true,
                 cancelButtonText: 'Batal',
                 showLoaderOnConfirm: true,
@@ -175,37 +197,32 @@
                     const petani = document.getElementById('swal-input-petani').value;
                     const komoditas = document.getElementById('swal-input-komoditas').value;
                     const kuantitas = document.getElementById('swal-input-kuantitas').value;
+                    const harga = document.getElementById('swal-input-harga').value;
                     
-                    if (!komoditas) {
-                        Swal.showValidationMessage('Komoditas tidak boleh kosong!');
-                        return false;
-                    }
-                    if (!kuantitas) {
-                        Swal.showValidationMessage('Kuantitas tidak boleh kosong!');
-                        return false;
-                    }
+                    if (!komoditas) { Swal.showValidationMessage('Komoditas tidak boleh kosong!'); return false; }
+                    if (!kuantitas) { Swal.showValidationMessage('Kuantitas tidak boleh kosong!'); return false; }
+                    if (!harga) { Swal.showValidationMessage('Harga penawaran harus diisi!'); return false; }
                     
-                    // Eksekusi AJAX Fetch API ke Laravel
                     return fetch("{{ route('distributor.permintaan.store') }}", {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Accept': 'application/json', // Memaksa Laravel membalas dengan JSON jika ada error
+                            'Accept': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
                         body: JSON.stringify({
                             petani: petani,
                             komoditas: komoditas,
-                            kuantitas: kuantitas
+                            kuantitas: kuantitas,
+                            harga: harga
                         })
                     }).then(async response => {
                         if (!response.ok) {
-                            // Menangkap pesan error asli dari Laravel
                             const errData = await response.json().catch(() => null);
                             const errMsg = errData && errData.message ? errData.message : response.statusText;
                             throw new Error(errMsg);
                         }
-                        return { petani, komoditas, kuantitas };
+                        return { petani, komoditas, kuantitas, harga };
                     }).catch(error => {
                         Swal.showValidationMessage(`Gagal: ${error.message}`);
                     });
@@ -213,93 +230,42 @@
                 allowOutsideClick: () => !Swal.isLoading()
             }).then((result) => {
                 if (result.isConfirmed) {
-                    let targetText = result.value.petani === 'all' ? 'semua petani' : 'Petani ' + result.value.petani;
+                    let targetText = result.value.petani === 'all' ? 'semua mitra petani' : 'Mitra ' + result.value.petani;
+                    let hargaFormat = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(result.value.harga);
+                    
                     Swal.fire({
                         icon: 'success',
                         title: 'Permintaan Tercatat!',
-                        text: result.value.kuantitas + ' Ton ' + result.value.komoditas + ' berhasil dikirim ke ' + targetText + '.',
+                        html: `Permintaan <b>${result.value.kuantitas} Ton ${result.value.komoditas}</b> dengan penawaran harga <b>${hargaFormat}/Kg</b> berhasil dikirim ke <b>${targetText}</b>.`,
                         confirmButtonColor: '#43B75D'
+                    }).then(() => {
+                        window.location.reload(); 
                     });
                 }
             });
         }
 
-        // Fungsi untuk tombol "Proses Beli"
-        function prosesBeli(idTrx, namaPetani) {
-            Swal.fire({
-                title: 'Proses Pembelian?',
-                text: "Anda akan memproses pembelian " + idTrx + " dari petani " + namaPetani + ".",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#3B82F6', // Biru
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Lanjutkan!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Berhasil diproses!',
-                        text: 'Invoice telah dikirim ke ' + namaPetani + '.',
-                        icon: 'success',
-                        confirmButtonColor: '#43B75D'
-                    });
-                }
-            });
-        }
-
-        // Fungsi untuk tombol "Booking"
-        function prosesBooking(idTrx, namaPetani) {
-            Swal.fire({
-                title: 'Booking Panen?',
-                text: "Lahan " + namaPetani + " masih menunggu masa panen. Lakukan pembayaran DP untuk mem-booking.",
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonColor: '#F59E0B', // Kuning
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Bayar DP Booking',
-                cancelButtonText: 'Tutup'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Booking Berhasil!',
-                        text: 'Panen ' + idTrx + ' sudah diamankan untuk Anda.',
-                        icon: 'success',
-                        confirmButtonColor: '#43B75D'
-                    });
-                }
-            });
-        }
-
-        // Fungsi untuk tombol "Eye (Lihat Detail)"
-        function lihatDetail(idTrx, namaPetani) {
-            Swal.fire({
-                title: 'Detail ' + idTrx,
-                html: `
-                    <div class="text-left space-y-2 mt-4 text-sm">
-                        <p><strong>Petani:</strong> ${namaPetani}</p>
-                        <p><strong>Komoditas:</strong> Bawang Putih Bonggol</p>
-                        <p><strong>Status Pembayaran:</strong> <span class="text-green-600 font-bold">LUNAS</span></p>
-                        <p><strong>Tanggal Transaksi:</strong> 2 Mei 2026</p>
-                    </div>
-                `,
-                icon: 'info',
-                confirmButtonColor: '#004F3B',
-                confirmButtonText: 'Tutup'
-            });
-        }
-
-        // Fungsi Dinamis untuk Lihat Detail
-        function lihatDetail(idTrx, namaPetani, komoditas, status, tanggal) {
+        // Fungsi Dinamis untuk Lihat Detail Update + Harga
+        function lihatDetail(idTrx, namaPetani, komoditas, status, tanggal, kuantitas, harga) {
             let statusColor = status === 'LUNAS' ? 'text-green-600' : (status === 'DITOLAK' ? 'text-red-600' : 'text-yellow-600');
+            let hargaFormat = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(harga);
+            let totalFormat = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(harga * (kuantitas * 1000));
             
             Swal.fire({
                 title: 'Detail Transaksi ' + idTrx,
                 html: `
-                    <div class="text-left space-y-3 mt-4 text-sm bg-gray-50 p-4 rounded-lg border border-gray-100">
+                    <div class="text-left space-y-3 mt-4 text-[14px] bg-gray-50 p-4 rounded-xl border border-gray-100">
                         <div class="flex justify-between"><span class="text-gray-500">Mitra Petani:</span> <strong class="text-gray-900">${namaPetani === 'all' ? 'Semua Petani' : namaPetani}</strong></div>
                         <div class="flex justify-between"><span class="text-gray-500">Komoditas:</span> <strong class="text-primary-dark">${komoditas}</strong></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Kuantitas:</span> <strong class="text-gray-900">${kuantitas} Ton</strong></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Harga Penawaran:</span> <strong class="text-amber-600">${hargaFormat} / Kg</strong></div>
                         <div class="flex justify-between"><span class="text-gray-500">Tanggal Transaksi:</span> <strong class="text-gray-900">${tanggal}</strong></div>
-                        <div class="flex justify-between border-t border-gray-200 pt-2 mt-2"><span class="text-gray-500">Status Pembayaran:</span> <strong class="${statusColor}">${status}</strong></div>
+                        
+                        <div class="flex justify-between border-t border-gray-200 pt-3 mt-3">
+                            <span class="text-gray-900 font-bold">Total Nilai Kontrak:</span> 
+                            <strong class="text-primary-dark text-lg">${totalFormat}</strong>
+                        </div>
+                        <div class="flex justify-between mt-1"><span class="text-gray-500">Status Pembayaran:</span> <strong class="${statusColor}">${status}</strong></div>
                     </div>
                 `,
                 icon: 'info',
@@ -308,11 +274,14 @@
             });
         }
 
-        // Fungsi Baru untuk Flow Pembayaran Distributor
-        function bayarPesanan(id, petani, komoditas, kuantitas) {
+        // Fungsi Flow Pembayaran Distributor
+        function bayarPesanan(id, petani, komoditas, kuantitas, harga) {
+            let totalBayar = harga * (kuantitas * 1000); // Kuantitas (Ton) dikali 1000 jadi Kg
+            let totalFormat = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(totalBayar);
+
             Swal.fire({
                 title: 'Proses Pembayaran',
-                html: `Anda akan membayar tagihan untuk <b>${kuantitas} Ton ${komoditas}</b> kepada petani <b>${petani === 'all' ? 'terpilih' : petani}</b>.`,
+                html: `Anda akan membayar tagihan sebesar <br><strong class="text-2xl text-primary-dark mt-2 block">${totalFormat}</strong><br>untuk <b>${kuantitas} Ton ${komoditas}</b> kepada petani <b>${petani === 'all' ? 'terpilih' : petani}</b>.`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3B82F6',

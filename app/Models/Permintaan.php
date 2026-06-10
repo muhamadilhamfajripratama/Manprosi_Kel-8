@@ -2,9 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Permintaan extends Model
 {
-    protected $guarded = []; // Mengizinkan semua kolom diisi
+    use HasFactory;
+
+    // Gunakan $fillable demi keamanan data transaksi
+    protected $fillable = [
+        'target_petani',
+        'komoditas',
+        'kuantitas',
+        'harga',
+        'status',
+    ];
 }

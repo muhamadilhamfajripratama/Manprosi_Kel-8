@@ -9,11 +9,20 @@ class DistributorController extends Controller
 {
     public function kirimPermintaan(Request $request)
     {
+        // Validasi inputan demi keamanan (Best Practice)
+        $request->validate([
+            'petani' => 'required|string',
+            'komoditas' => 'required|string',
+            'kuantitas' => 'required|numeric',
+            'harga' => 'required|numeric', // Pastikan harga berupa angka
+        ]);
+
         // Menyimpan data langsung ke database
         Permintaan::create([
             'target_petani' => $request->petani,
             'komoditas' => $request->komoditas,
             'kuantitas' => $request->kuantitas,
+            'harga' => $request->harga, // <--- Field harga ditangkap dan disimpan
             'status' => 'menunggu'
         ]);
 

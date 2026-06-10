@@ -65,17 +65,38 @@
         </div>
     </aside>
 
+    {{-- LOGIKA PENGAMBILAN DATA DINAMIS --}}
+    @php
+        // Ambil SEMUA data batch tanam
+        $semuaBatch = \App\Models\BatchTanam::all();
+
+        // 1. Kumpulkan List Nama Komoditas Unik Untuk Dropdown Filter
+        $listKomoditasUnik = $semuaBatch->pluck('komoditas')->map(function($item) {
+            return ucwords(strtolower(trim($item)));
+        })->filter()->unique()->sort();
+
+        // 2. Masukkan Komoditas ke dalam Lahan agar JS Peta bisa membacanya
+        if(isset($lahans)) {
+            foreach($lahans as $lahan) {
+                $batchAktif = $semuaBatch->where('lahan_id', $lahan->id)->where('status', 'aktif')->first();
+                if(!$batchAktif) {
+                    $batchAktif = $semuaBatch->where('lahan_id', $lahan->id)->sortByDesc('created_at')->first();
+                }
+                
+                $lahan->komoditas_saat_ini = $batchAktif ? ucwords(strtolower(trim($batchAktif->komoditas))) : 'Belum Ditentukan';
+            }
+        }
+    @endphp
+
     {{-- MAIN CONTENT (PETA FULL SCREEN) --}}
     <div class="flex-1 h-full relative z-10 bg-gray-900 flex flex-col">
         
-        {{-- Header Singkat di atas Peta --}}
         <div class="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/60 to-transparent z-[1000] flex items-center px-8 pointer-events-none">
             <h2 class="text-white text-xl font-bold shadow-sm flex items-center gap-2">
                 <i class="ph ph-map-pin-line text-primary-mid"></i> Peta Persebaran Komoditas Tani
             </h2>
         </div>
 
-        {{-- CONTAINER PETA --}}
         <div id="map-distributor" class="w-full h-full"></div>
 
         {{-- FLOATING PANEL KIRI: PENCARIAN KOMODITAS --}}
@@ -89,11 +110,18 @@
             </div>
             
             <div class="space-y-4">
+                {{-- FIXED: UPDATE JADI DROPDOWN DINAMIS --}}
                 <div>
                     <label class="block text-[11px] font-bold text-gray-700 mb-1.5 uppercase tracking-wider">Nama Komoditas</label>
                     <div class="relative">
-                        <i class="ph ph-plant absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                        <input type="text" id="filter-komoditas" onkeyup="eksekusiFilter()" placeholder="Misal: Bawang Putih, Kol..." class="w-full border border-gray-300 rounded-[8px] pl-9 pr-3 py-2.5 text-[13px] focus:outline-none focus:border-primary-mid focus:ring-1 focus:ring-primary-mid transition">
+                        <i class="ph ph-plant absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10"></i>
+                        <select id="filter-komoditas" onchange="eksekusiFilter()" class="w-full border border-gray-300 rounded-[8px] pl-9 pr-8 py-2.5 text-[13px] focus:outline-none focus:border-primary-mid focus:ring-1 focus:ring-primary-mid transition appearance-none bg-white font-medium text-gray-700 cursor-pointer">
+                            <option value="">-- Semua Komoditas --</option>
+                            @foreach($listKomoditasUnik as $komo)
+                                <option value="{{ strtolower($komo) }}">{{ $komo }}</option>
+                            @endforeach
+                        </select>
+                        <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none z-10"></i>
                     </div>
                 </div>
                 
@@ -148,7 +176,8 @@
                 if(lahan.titik_batas) {
                     try {
                         let geoObj = (typeof lahan.titik_batas === 'string') ? JSON.parse(lahan.titik_batas) : lahan.titik_batas;
-                        let komoditasName = lahan.komoditas ? lahan.komoditas.nama_komoditas : (lahan.komoditas || 'Belum Ditentukan');
+                        
+                        let komoditasName = lahan.komoditas_saat_ini ? lahan.komoditas_saat_ini : 'Belum Ditentukan';
                         let warna = '#43B75D'; // Default Hijau
                         
                         const polyLayer = L.geoJSON(geoObj, { style: { color: warna, fillColor: warna, fillOpacity: 0.6, weight: 2 } });
