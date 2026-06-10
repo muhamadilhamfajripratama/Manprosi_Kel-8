@@ -52,6 +52,7 @@ class PenanamanController extends Controller
             'jumlah_bibit'        => 'nullable|numeric',
             'satuan_bibit'        => 'nullable|string',
             'jarak_tanam_cm'      => 'nullable|string',
+            'biaya_bibit'         => 'nullable|numeric',
             'metode_tanam'        => 'nullable|string',
             'durasi_standar_hari' => 'nullable|numeric',
         ]);
@@ -66,6 +67,7 @@ class PenanamanController extends Controller
             'jumlah_bibit'        => $request->jumlah_bibit,
             'satuan_bibit'        => $request->satuan_bibit,
             'jarak_tanam_cm'      => $request->jarak_tanam_cm,
+            'biaya_bibit'         => $request->biaya_bibit,
             'metode_tanam'        => $request->metode_tanam,
             'durasi_standar_hari' => $request->durasi_standar_hari,
             'catatan'             => $request->catatan,

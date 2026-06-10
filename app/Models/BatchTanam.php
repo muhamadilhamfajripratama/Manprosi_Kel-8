@@ -17,6 +17,7 @@ class BatchTanam extends Model
         'jumlah_bibit', 
         'satuan_bibit', 
         'jarak_tanam_cm', 
+        'biaya_bibit',
         'metode_tanam', 
         'durasi_standar_hari', 
         'status', 

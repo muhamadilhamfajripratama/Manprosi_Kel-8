@@ -75,6 +75,12 @@
                 <span class="text-[15px]">Penanaman</span>
             </a>
 
+            {{-- FIXED: MENU KALENDER JADWAL DITAMBAHKAN KEMBALI DI SINI --}}
+            <a href="{{ route('jadwal') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
+                <i class="ph ph-calendar-blank text-[20px]"></i>
+                <span class="text-[15px]">Kalender Jadwal</span>
+            </a>
+
             <a href="{{ route('irigasi') }}" class="flex items-center gap-3 px-3 py-2.5 text-white/70 hover:bg-white/5 hover:text-white rounded-lg transition-colors">
                 <i class="ph ph-drop text-[20px]"></i>
                 <span class="text-[15px]">Pengairan & Irigasi</span>
@@ -162,7 +168,6 @@
     
                 <a href="{{ route('notifikasi') }}" class="text-gray-400 hover:text-primary-dark transition relative cursor-pointer">
                     <i class="ph ph-bell text-[24px]"></i>
-                    @php $notifCount = \App\Models\BatchTanam::countNotifikasiPanen(); @endphp
                     @if($notifCount > 0)
                         <span class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm absolute -top-1 -right-2">
                             {{ $notifCount }}
@@ -185,7 +190,7 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
                 <div>
                     <h2 class="text-[32px] font-semibold text-primary-dark leading-tight">
-                        Selamat pagi, {{ explode(' ', Auth::user()->name)[0] }} 👋
+                        Selamat pagi, {{ Auth::check() ? explode(' ', Auth::user()->name)[0] : 'Petani' }} 👋
                     </h2>
                     <p class="text-[14px] text-gray-400 mt-1">
                         {{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
@@ -213,12 +218,12 @@
                     </div>
                     <div>
                         <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Est. Panen</p>
-                        @if($totalBatch == 0)
+                        @if(!isset($totalBatch) || $totalBatch == 0)
                             <h3 class="text-[22px] font-bold text-gray-900">-</h3>
-                        @elseif($estimasiPanen == 0)
+                        @elseif(isset($estimasiPanen) && $estimasiPanen == 0)
                             <h3 class="text-[20px] font-bold text-red-500">Hari Ini!</h3>
                         @else
-                            <h3 class="text-[22px] font-bold text-gray-900">{{ $estimasiPanen }} Hari Lagi</h3>
+                            <h3 class="text-[22px] font-bold text-gray-900">{{ $estimasiPanen ?? 0 }} Hari Lagi</h3>
                         @endif
                     </div>
                 </div>
@@ -232,7 +237,7 @@
             <div onclick="lihatDetailPrediksi()" class="bg-gradient-to-br from-primary-dark to-primary-mid rounded-2xl p-6 text-white shadow-md flex items-center justify-between cursor-pointer hover:shadow-lg transition hover:scale-[1.02] mb-6">
                 <div>
                     <p class="text-white/80 text-[12px] font-bold uppercase tracking-wider mb-1">Prediksi Panen (30 Hari)</p>
-                    <h3 class="text-3xl font-bold">{{ $prediksiStokTeks }}</h3>
+                    <h3 class="text-3xl font-bold">{{ $prediksiStokTeks ?? '0 Kg' }}</h3>
                     <p class="text-[11px] text-white/70 mt-2 flex items-center gap-1">
                         <i class="ph ph-hand-tap"></i> Klik untuk rincian
                     </p>
@@ -286,51 +291,81 @@
                     </div>
                 </div>
 
-                {{-- JADWAL AKTIVITAS --}}
+                {{-- JADWAL AKTIVITAS DINAMIS --}}
                 <div class="bg-white rounded-[16px] shadow-card border border-gray-100 p-6 flex flex-col">
                     <h3 class="text-[18px] font-semibold text-gray-900 mb-6 flex items-center gap-2">
                         <i class="ph ph-calendar-text text-orange-500"></i> Jadwal Aktivitas
                     </h3>
                     
-                    <div class="space-y-6 flex-1">
-                        <div class="flex gap-4 relative">
-                            <div class="flex flex-col items-center">
-                                <div class="w-3.5 h-3.5 rounded-full bg-green-500 z-10 ring-4 ring-green-50"></div>
-                                <div class="w-0.5 h-full bg-gray-100 absolute top-4"></div>
-                            </div>
-                            <div class="pb-2">
-                                <p class="text-[11px] font-bold text-green-600 uppercase tracking-wider">Hari Ini</p>
-                                <h4 class="text-[14px] font-semibold text-gray-800 mt-0.5">Pemupukan Urea</h4>
-                                <p class="text-[12px] text-gray-500 mt-1">Lahan Bawang Putih — Blok A</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex gap-4 relative">
-                            <div class="flex flex-col items-center">
-                                <div class="w-3.5 h-3.5 rounded-full bg-blue-500 z-10 ring-4 ring-blue-50"></div>
-                                <div class="w-0.5 h-full bg-gray-100 absolute top-4"></div>
-                            </div>
-                            <div class="pb-2">
-                                <p class="text-[11px] font-bold text-blue-600 uppercase tracking-wider">Besok</p>
-                                <h4 class="text-[14px] font-semibold text-gray-800 mt-0.5">Pengecekan Hama</h4>
-                                <p class="text-[12px] text-gray-500 mt-1">Lahan Bawang Putih — Blok B</p>
-                            </div>
-                        </div>
+                    {{-- FIXED: LOGIKA DINAMIS MENGAMBIL ESTIMASI PANEN DARI BATCH AKTIF --}}
+                    @php
+                        $warnaConfig = [
+                            'red' => ['bg' => 'bg-red-500', 'ring' => 'ring-red-50', 'text' => 'text-red-600'],
+                            'green' => ['bg' => 'bg-green-500', 'ring' => 'ring-green-50', 'text' => 'text-green-600'],
+                            'blue' => ['bg' => 'bg-blue-500', 'ring' => 'ring-blue-50', 'text' => 'text-blue-600'],
+                            'orange' => ['bg' => 'bg-orange-400', 'ring' => 'ring-orange-50', 'text' => 'text-orange-500'],
+                        ];
 
-                        <div class="flex gap-4">
-                            <div class="flex flex-col items-center">
-                                <div class="w-3.5 h-3.5 rounded-full bg-orange-400 z-10 ring-4 ring-orange-50"></div>
+                        $jadwalMendatang = collect($batchesAktif ?? [])->map(function($b) use ($warnaConfig) {
+                            $durasi = $b->durasi_standar_hari ?: 1;
+                            $tglPanen = \Carbon\Carbon::parse($b->tanggal_tanam)->addDays($durasi);
+                            
+                            $colorKey = 'orange';
+                            if ($tglPanen->isPast()) $colorKey = 'red';
+                            elseif ($tglPanen->isToday()) $colorKey = 'green';
+                            elseif ($tglPanen->isTomorrow()) $colorKey = 'blue';
+
+                            return [
+                                'tanggal' => $tglPanen,
+                                'hari_ini' => $tglPanen->isToday(),
+                                'besok' => $tglPanen->isTomorrow(),
+                                'judul' => 'Est. Panen: ' . $b->komoditas,
+                                'lahan' => $b->lahan->nama_lahan ?? 'Lahan Tidak Diketahui',
+                                'styles' => $warnaConfig[$colorKey]
+                            ];
+                        })
+                        ->filter(function($j) {
+                            // Hanya tampilkan yang akan datang atau hari ini
+                            return $j['tanggal']->startOfDay()->gte(\Carbon\Carbon::now()->startOfDay());
+                        })
+                        ->sortBy('tanggal')
+                        ->take(3); // Ambil 3 terdekat
+                    @endphp
+
+                    <div class="space-y-6 flex-1">
+                        @forelse($jadwalMendatang as $jadwal)
+                            <div class="flex gap-4 relative">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-3.5 h-3.5 rounded-full {{ $jadwal['styles']['bg'] }} z-10 ring-4 {{ $jadwal['styles']['ring'] }}"></div>
+                                    @if(!$loop->last)
+                                        <div class="w-0.5 h-full bg-gray-100 absolute top-4"></div>
+                                    @endif
+                                </div>
+                                <div class="pb-2">
+                                    <p class="text-[11px] font-bold {{ $jadwal['styles']['text'] }} uppercase tracking-wider">
+                                        @if($jadwal['hari_ini'])
+                                            Hari Ini!
+                                        @elseif($jadwal['besok'])
+                                            Besok
+                                        @else
+                                            {{ $jadwal['tanggal']->translatedFormat('d M Y') }}
+                                        @endif
+                                    </p>
+                                    <h4 class="text-[14px] font-semibold text-gray-800 mt-0.5">{{ $jadwal['judul'] }}</h4>
+                                    <p class="text-[12px] text-gray-500 mt-1"><i class="ph ph-map-pin"></i> {{ $jadwal['lahan'] }}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-[11px] font-bold text-orange-500 uppercase tracking-wider">20 Mei 2026</p>
-                                <h4 class="text-[14px] font-semibold text-gray-800 mt-0.5">Estimasi Panen</h4>
-                                <p class="text-[12px] text-gray-500 mt-1">Lahan Bawang Putih — Blok A</p>
+                        @empty
+                            <div class="flex flex-col items-center justify-center text-center py-6">
+                                <i class="ph ph-calendar-check text-4xl text-gray-200 mb-3"></i>
+                                <p class="text-[13px] font-semibold text-gray-500">Tidak ada jadwal terdekat</p>
+                                <p class="text-[11px] text-gray-400 mt-1">Belum ada estimasi panen dalam waktu dekat.</p>
                             </div>
-                        </div>
+                        @endforelse
                     </div>
                     
                     <a href="{{ route('jadwal') }}" class="block text-center w-full mt-4 py-2.5 text-[13px] font-semibold text-primary-dark bg-primary-light rounded-[8px] hover:bg-green-100 transition">
-                        Lihat Semua Jadwal
+                        Buka Kalender Jadwal
                     </a>
                 </div>
 
@@ -362,7 +397,6 @@
                         <tbody class="text-[13px] font-medium text-gray-700 divide-y divide-gray-50">
                             @forelse($batchesAktif ?? [] as $batch)
                                 @php
-                                    // LOGIKA PERHITUNGAN PROGRESS BAR
                                     $tglTanam = \Carbon\Carbon::parse($batch->tanggal_tanam)->startOfDay();
                                     $durasiStandar = $batch->durasi_standar_hari ?: 1; 
                                     $tglPanen = $tglTanam->copy()->addDays($durasiStandar);
